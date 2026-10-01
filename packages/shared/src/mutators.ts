@@ -43,15 +43,15 @@ function liveCardCount(state: BoardState, columnId: string, excludeCardId?: stri
   return count;
 }
 
-/** R2 + R3: can `cardId` be live in `columnId`? */
+/**
+ * R2 + R3: can `cardId` be live in `columnId`? Returns a reject code, or null if it can.
+ * Used by createCard, moveCard and restoreCard.
+ *
+ * TODO lesson 1. Think about: what if the column doesn't exist? Is deleted? Is full?
+ * And: when a card is moved *within* a full column, should it count itself?
+ */
 function checkTarget(state: BoardState, columnId: string, cardId: string): RejectCode | null {
-  const target = state.columns[columnId];
-  if (!target) return "INVALID";
-  if (target.deleted) return "COLUMN_DELETED";
-  if (target.wipLimit !== null && liveCardCount(state, columnId, cardId) >= target.wipLimit) {
-    return "WIP_LIMIT";
-  }
-  return null;
+  throw new Error("TODO lesson 1: checkTarget");
 }
 
 const mutators: { [N in IntentName]: Mutator<N> } = {
@@ -62,14 +62,11 @@ const mutators: { [N in IntentName]: Mutator<N> } = {
     return ok(card(cardId, { columnId, order, deleted: false }));
   },
 
+  // TODO lesson 1. Rules: R2, R3, R6, R7 (unknown card), R9 (`expect`).
+  // The order of the checks matters: the tests expect a specific code when several rules fail.
+  // Look at deleteCard below for the shape.
   moveCard(state, { cardId, columnId, order, expect }) {
-    const current = state.cards[cardId];
-    if (!current) return reject("INVALID", `unknown card ${cardId}`);
-    if (!matches(current, expect)) return reject("STALE");
-    if (current.deleted) return reject("CARD_DELETED");
-    const problem = checkTarget(state, columnId, cardId);
-    if (problem) return reject(problem);
-    return ok(card(cardId, { ...current, columnId, order }));
+    throw new Error("TODO lesson 1: moveCard");
   },
 
   deleteCard(state, { cardId, expect }) {
@@ -103,13 +100,10 @@ const mutators: { [N in IntentName]: Mutator<N> } = {
     return ok(column(columnId, { ...current, order }));
   },
 
+  // TODO lesson 1. Rules: R4, R7, R9. What should deleting an already-deleted column do? (Hint: C9,
+  // and think about two people pressing "Delete column" at the same moment.)
   deleteColumn(state, { columnId, expect }) {
-    const current = state.columns[columnId];
-    if (!current) return reject("INVALID", `unknown column ${columnId}`);
-    if (!matches(current, expect)) return reject("STALE");
-    if (current.deleted) return ok();
-    if (liveCardCount(state, columnId) > 0) return reject("COLUMN_NOT_EMPTY");
-    return ok(column(columnId, { ...current, deleted: true }));
+    throw new Error("TODO lesson 1: deleteColumn");
   },
 
   /** Undo of deleteColumn, redo of createColumn (M6). */
@@ -121,15 +115,9 @@ const mutators: { [N in IntentName]: Mutator<N> } = {
     return ok(column(columnId, { ...current, deleted: false }));
   },
 
+  // TODO lesson 1. Rules: R5, R7, R9, and "a deleted column can't be changed". `null` means no limit.
   setWipLimit(state, { columnId, wipLimit, expect }) {
-    const current = state.columns[columnId];
-    if (!current) return reject("INVALID", `unknown column ${columnId}`);
-    if (!matches(current, expect)) return reject("STALE");
-    if (current.deleted) return reject("COLUMN_DELETED");
-    if (wipLimit !== null && liveCardCount(state, columnId) > wipLimit) {
-      return reject("WIP_BELOW_COUNT");
-    }
-    return ok(column(columnId, { ...current, wipLimit }));
+    throw new Error("TODO lesson 1: setWipLimit");
   },
 };
 
