@@ -7,7 +7,9 @@ import { useToast } from "./Toasts.js";
 function inTextField(target: EventTarget | null): boolean {
   return (
     target instanceof HTMLElement &&
-    (target.isContentEditable || (target.tagName === "INPUT" && (target as HTMLInputElement).type !== "range") || target.tagName === "TEXTAREA")
+    (target.isContentEditable ||
+      (target.tagName === "INPUT" && (target as HTMLInputElement).type !== "range") ||
+      target.tagName === "TEXTAREA")
   );
 }
 
@@ -23,11 +25,16 @@ export function useUndo(client: BoardClient) {
   const [history, setHistory] = useState<BoardUndo | null>(null);
   useEffect(() => {
     const next = new BoardUndo(client);
+    // Creating the history *is* the effect (it subscribes to the client). See the comment above.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setHistory(next);
     return () => next.destroy();
   }, [client]);
 
-  const subscribe = useCallback((listener: () => void) => history?.subscribe(listener) ?? (() => {}), [history]);
+  const subscribe = useCallback(
+    (listener: () => void) => history?.subscribe(listener) ?? (() => {}),
+    [history],
+  );
   const canUndo = useSyncExternalStore(subscribe, () => history?.canUndo ?? false);
   const canRedo = useSyncExternalStore(subscribe, () => history?.canRedo ?? false);
 

@@ -20,7 +20,12 @@ export function toRelative(rect: Rect, clientX: number, clientY: number): { x: n
 }
 
 /** Fraction of an element's box → position inside `container` (both rects in viewport coordinates). */
-export function fromRelative(rect: Rect, container: Rect, x: number, y: number): { left: number; top: number } {
+export function fromRelative(
+  rect: Rect,
+  container: Rect,
+  x: number,
+  y: number,
+): { left: number; top: number } {
   return {
     left: rect.left - container.left + clamp01(x) * rect.width,
     top: rect.top - container.top + clamp01(y) * rect.height,

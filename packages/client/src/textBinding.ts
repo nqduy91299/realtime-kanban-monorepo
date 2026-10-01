@@ -20,10 +20,7 @@ export function diffText(before: string, after: string): TextEdit | null {
   const max = Math.min(before.length, after.length);
   while (start < max && before[start] === after[start]) start++;
   let end = 0;
-  while (
-    end < max - start &&
-    before[before.length - 1 - end] === after[after.length - 1 - end]
-  ) {
+  while (end < max - start && before[before.length - 1 - end] === after[after.length - 1 - end]) {
     end++;
   }
   return {

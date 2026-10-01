@@ -37,7 +37,8 @@ export default defineConfig({
       reuseExistingServer: false,
     },
     {
-      command: "pnpm --filter @kanban/web exec sh -c 'vite build --outDir dist-e2e && vite preview --outDir dist-e2e --port 4273 --strictPort'",
+      command:
+        "pnpm --filter @kanban/web exec sh -c 'vite build --outDir dist-e2e && vite preview --outDir dist-e2e --port 4273 --strictPort'",
       env: { KANBAN_SERVER: SERVER },
       port: 4273,
       reuseExistingServer: false,

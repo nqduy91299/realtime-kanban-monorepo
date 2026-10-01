@@ -36,7 +36,9 @@ export function ToastProvider({ client, children }: { client: BoardClient | null
       // F6: after an offline flush several can fail at once. Name each one (up to three).
       const lines = all.slice(0, 3).map((r) => describeFailure(client, r.intent, r.code));
       const more = all.length > 3 ? ` And ${all.length - 3} more.` : "";
-      show(all.length === 1 ? lines[0]! : `${all.length} changes couldn't be saved. ${lines.join(" ")}${more}`);
+      show(
+        all.length === 1 ? lines[0]! : `${all.length} changes couldn't be saved. ${lines.join(" ")}${more}`,
+      );
     };
     const stop = client.onRejected((rejection) => {
       batch.push(rejection);

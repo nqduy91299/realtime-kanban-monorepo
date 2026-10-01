@@ -50,8 +50,7 @@ export class Store {
 
   intentResult(board: string, id: string): { code: RejectCode | null } | undefined {
     return this.db.prepare("SELECT code FROM intents WHERE board = ? AND id = ?").get(board, id) as
-      | { code: RejectCode | null }
-      | undefined;
+      { code: RejectCode | null } | undefined;
   }
 
   recordIntent(board: string, id: string, code: RejectCode | null): void {

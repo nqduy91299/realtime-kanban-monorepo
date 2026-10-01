@@ -24,6 +24,11 @@ export interface LocalStore {
 }
 
 const DB_NAME = "kanban";
+
+/** IndexedDB reports failures as `error`, which may be null. Never reject a Promise with null. */
+function idbError(error: DOMException | null): Error {
+  return error ?? new Error("IndexedDB request failed");
+}
 const VERSION = 1;
 
 interface UpdateRow {
@@ -59,7 +64,7 @@ export class IndexedDbStore implements LocalStore {
         outbox.createIndex("byId", "id", { unique: true });
       };
       request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(idbError(request.error));
     });
   }
 
@@ -73,11 +78,15 @@ export class IndexedDbStore implements LocalStore {
   }
 
   appendUpdate(boardId: string, doc: DocName, update: Uint8Array): void {
-    void this.write("updates", (store) => store.add({ board: boardId, doc, data: update } satisfies UpdateRow));
+    void this.write("updates", (store) =>
+      store.add({ board: boardId, doc, data: update } satisfies UpdateRow),
+    );
   }
 
   addIntent(boardId: string, intent: Intent): void {
-    void this.write("outbox", (store) => store.add({ board: boardId, id: intent.id, intent } satisfies IntentRow));
+    void this.write("outbox", (store) =>
+      store.add({ board: boardId, id: intent.id, intent } satisfies IntentRow),
+    );
   }
 
   removeIntent(_boardId: string, intentId: string): void {
@@ -114,7 +123,7 @@ export class IndexedDbStore implements LocalStore {
         }
       };
       tx.oncomplete = () => resolve(merged);
-      tx.onerror = () => reject(tx.error);
+      tx.onerror = () => reject(idbError(tx.error));
     });
   }
 
@@ -128,7 +137,7 @@ export class IndexedDbStore implements LocalStore {
         const seen = new Set<string>();
         resolve(rows.filter((r) => !seen.has(r.id) && seen.add(r.id)).map((r) => r.intent));
       };
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(idbError(request.error));
     });
   }
 
@@ -139,7 +148,7 @@ export class IndexedDbStore implements LocalStore {
       fn(tx.objectStore(storeName));
       await new Promise<void>((resolve, reject) => {
         tx.oncomplete = () => resolve();
-        tx.onerror = () => reject(tx.error);
+        tx.onerror = () => reject(idbError(tx.error));
       });
     } catch (error) {
       // Quota exceeded, private mode, etc. The app keeps working; this change just won't survive a reload.
@@ -153,16 +162,16 @@ export class MemoryStore implements LocalStore {
   private updates: { board: string; doc: DocName; data: Uint8Array }[] = [];
   private intents: { board: string; intent: Intent }[] = [];
 
-  async load(boardId: string): Promise<LocalSnapshot> {
+  load(boardId: string): Promise<LocalSnapshot> {
     const merged = (doc: DocName) => {
       const rows = this.updates.filter((u) => u.board === boardId && u.doc === doc).map((u) => u.data);
       return rows.length ? Y.mergeUpdates(rows) : null;
     };
-    return {
+    return Promise.resolve({
       content: merged("content"),
       structure: merged("structure"),
       outbox: this.intents.filter((i) => i.board === boardId).map((i) => i.intent),
-    };
+    });
   }
   appendUpdate(boardId: string, doc: DocName, update: Uint8Array): void {
     this.updates.push({ board: boardId, doc, data: update });

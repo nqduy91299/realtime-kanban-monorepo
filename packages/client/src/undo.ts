@@ -10,15 +10,24 @@ import type { BoardClient } from "./BoardClient.js";
  *
  * Returns null for changes that did nothing (deleting something already deleted, for example).
  */
-export function invertIntent(before: BoardState, intent: IntentBody): { undo: IntentBody; redo: IntentBody } | null {
+export function invertIntent(
+  before: BoardState,
+  intent: IntentBody,
+): { undo: IntentBody; redo: IntentBody } | null {
   switch (intent.name) {
     case "moveCard": {
       const { cardId, columnId, order } = intent.args;
       const prev = before.cards[cardId];
       if (!prev || (prev.columnId === columnId && prev.order === order)) return null;
       return {
-        undo: { name: "moveCard", args: { cardId, columnId: prev.columnId, order: prev.order, expect: { columnId, order } } },
-        redo: { name: "moveCard", args: { cardId, columnId, order, expect: { columnId: prev.columnId, order: prev.order } } },
+        undo: {
+          name: "moveCard",
+          args: { cardId, columnId: prev.columnId, order: prev.order, expect: { columnId, order } },
+        },
+        redo: {
+          name: "moveCard",
+          args: { cardId, columnId, order, expect: { columnId: prev.columnId, order: prev.order } },
+        },
       };
     }
     case "createCard":
@@ -155,7 +164,7 @@ export class BoardUndo {
     const entry = from.pop();
     if (!entry) return { ok: false, entry: null };
     const intent = entry[direction];
-    const result = this.client.mutate(intent.name, intent.args as never, direction);
+    const result = this.client.mutate(intent.name, intent.args, direction);
     if (!result.ok) {
       // Refused locally (e.g. STALE: someone changed it since). The entry can't apply any more: drop it.
       this.notify();

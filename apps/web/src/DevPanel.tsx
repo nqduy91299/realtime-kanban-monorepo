@@ -37,19 +37,30 @@ export function DevPanel({ client }: { client: BoardClient }) {
           }}
         />
         <div className="dev-row">
-          <button type="button" onClick={() => arm("Next change will be rejected", () => client.devRejectNext())}>
+          <button
+            type="button"
+            onClick={() => arm("Next change will be rejected", () => client.devRejectNext())}
+          >
             Reject next change
           </button>
           <button
             type="button"
-            onClick={() => arm("Next reply will be dropped (resend in 10 s)", () => client.devDropNextReply())}
+            onClick={() =>
+              arm("Next reply will be dropped (resend in 10 s)", () => client.devDropNextReply())
+            }
           >
             Drop next reply
           </button>
         </div>
         {armed && <p className="mono">{armed}</p>}
         <p className="dev-outbox mono">
-          Outbox: {client.getOutbox().length === 0 ? "empty" : client.getOutbox().map((i) => i.name).join(", ")}
+          Outbox:{" "}
+          {client.getOutbox().length === 0
+            ? "empty"
+            : client
+                .getOutbox()
+                .map((i) => i.name)
+                .join(", ")}
         </p>
       </div>
     </details>

@@ -13,7 +13,11 @@ const idle = (name: string, color = "#c2255c"): Presence => ({
   dragging: null,
 });
 
-const names = (client: BoardClient) => client.getPeers().map((p) => p.user.name).sort();
+const names = (client: BoardClient) =>
+  client
+    .getPeers()
+    .map((p) => p.user.name)
+    .sort();
 
 async function twoPeople() {
   const server = await startServer();
@@ -61,7 +65,9 @@ describe("P2 / P3 / P4 cursor, focus, dragging", () => {
     await eventually(() => expect(bob.getPeers()[0]?.dragging).toBe("card-1"));
 
     alice.setPresence({ cursor: null, focus: null, dragging: null });
-    await eventually(() => expect(bob.getPeers()[0]).toMatchObject({ cursor: null, focus: null, dragging: null }));
+    await eventually(() =>
+      expect(bob.getPeers()[0]).toMatchObject({ cursor: null, focus: null, dragging: null }),
+    );
   });
 
   it("ignores presence that doesn't match the schema", async () => {
@@ -70,7 +76,9 @@ describe("P2 / P3 / P4 cursor, focus, dragging", () => {
     rogue.setLocalState({ user: { name: "<script>", color: "red; background: url(x)" } });
     const ws = new WebSocket(`ws://localhost:${server.port}/boards/b1`);
     await new Promise((r) => (ws.onopen = r));
-    ws.send(JSON.stringify({ t: "awareness", update: toBase64(encodeAwarenessUpdate(rogue, [rogue.clientID])) }));
+    ws.send(
+      JSON.stringify({ t: "awareness", update: toBase64(encodeAwarenessUpdate(rogue, [rogue.clientID])) }),
+    );
     await new Promise((r) => setTimeout(r, 100));
     expect(names(alice)).toEqual(["Bob"]);
     rogue.destroy();
@@ -100,7 +108,9 @@ describe("P5 people who leave disappear", () => {
     ghost.setLocalState(idle("Ghost"));
     const ws = new WebSocket(`ws://localhost:${server.port}/boards/b1`);
     await new Promise((r) => (ws.onopen = r));
-    ws.send(JSON.stringify({ t: "awareness", update: toBase64(encodeAwarenessUpdate(ghost, [ghost.clientID])) }));
+    ws.send(
+      JSON.stringify({ t: "awareness", update: toBase64(encodeAwarenessUpdate(ghost, [ghost.clientID])) }),
+    );
     ghost.destroy(); // stops its renew timer; nothing more will be sent
     await eventually(() => expect(names(alice)).toEqual(["Bob", "Ghost"]));
 
@@ -171,7 +181,9 @@ describe("P8 offline", () => {
 
 function rowCount(dbPath: string): number {
   const db = new DatabaseSync(dbPath, { readOnly: true });
-  const { n } = db.prepare("SELECT (SELECT COUNT(*) FROM updates) + (SELECT COUNT(*) FROM intents) AS n").get() as {
+  const { n } = db
+    .prepare("SELECT (SELECT COUNT(*) FROM updates) + (SELECT COUNT(*) FROM intents) AS n")
+    .get() as {
     n: number;
   };
   db.close();

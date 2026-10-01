@@ -136,7 +136,12 @@ describe("R8 idempotency", () => {
       const m = JSON.parse(String(e.data));
       if (m.t === "ack" || m.t === "nack") answers.push(`${m.t}:${m.id}`);
     };
-    const create = { t: "intent", id: "fixed-1", name: "createCard", args: { cardId: "c1", columnId: "todo", order: "a0" } };
+    const create = {
+      t: "intent",
+      id: "fixed-1",
+      name: "createCard",
+      args: { cardId: "c1", columnId: "todo", order: "a0" },
+    };
     ws.send(JSON.stringify(create));
     ws.send(JSON.stringify(create)); // would be INVALID (duplicate card) if applied again
     await eventually(() => expect(answers).toEqual(["ack:fixed-1", "ack:fixed-1"]));
@@ -162,7 +167,14 @@ describe("R8 idempotency", () => {
         if (m.t === "ack" || m.t === "nack") resolve(m.t);
       };
     });
-    ws.send(JSON.stringify({ t: "intent", id: result.id, name: "createCard", args: { cardId: "c1", columnId: "todo", order: "a0" } }));
+    ws.send(
+      JSON.stringify({
+        t: "intent",
+        id: result.id,
+        name: "createCard",
+        args: { cardId: "c1", columnId: "todo", order: "a0" },
+      }),
+    );
     // Without the stored record this would be a nack: c1 already exists, so it's INVALID.
     expect(await answer).toBe("ack");
     ws.close();
@@ -241,7 +253,9 @@ describe("C5 move + edit title", () => {
     addCard(alice, "c1");
     getText(alice.content, textKey.cardTitle("c1")).insert(0, "Write docs");
     await settled(alice);
-    await eventually(() => expect(getText(bob.content, textKey.cardTitle("c1")).toString()).toBe("Write docs"));
+    await eventually(() =>
+      expect(getText(bob.content, textKey.cardTitle("c1")).toString()).toBe("Write docs"),
+    );
 
     move(alice, "c1", "doing");
     getText(bob.content, textKey.cardTitle("c1")).insert(10, " today");
@@ -382,11 +396,9 @@ describe("C11 both reorder the same column", () => {
     await eventually(() => {
       for (const c of [alice, bob]) {
         const columns = c.getView().board.columns;
-        expect(Object.keys(columns).sort((x, y) => (columns[x]!.order < columns[y]!.order ? -1 : 1))).toEqual([
-          "done",
-          "todo",
-          "doing",
-        ]);
+        expect(Object.keys(columns).sort((x, y) => (columns[x]!.order < columns[y]!.order ? -1 : 1))).toEqual(
+          ["done", "todo", "doing"],
+        );
       }
     });
   });

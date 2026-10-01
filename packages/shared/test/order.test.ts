@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { applyChanges, cardOrderAt, columnOrderAt, runIntent, sortedCardIds, sortedColumnIds, type BoardState } from "../src/index.js";
+import {
+  applyChanges,
+  cardOrderAt,
+  columnOrderAt,
+  runIntent,
+  sortedCardIds,
+  sortedColumnIds,
+  type BoardState,
+} from "../src/index.js";
 import { board, editor } from "./fixtures.js";
 
 function moveTo(state: BoardState, cardId: string, columnId: string, index: number): BoardState {

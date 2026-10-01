@@ -43,8 +43,12 @@ export function Card({ client, cardId, pending, highlight, focusedBy, draggedBy,
   const titleText = getText(client.content, textKey.cardTitle(cardId));
   const title = useYText(titleText).trim() || "Untitled";
 
-  const draggable = useDraggable({ id: `card:${cardId}`, disabled: readOnly });
-  const droppable = useDroppable({ id: `drop-card:${cardId}`, disabled: readOnly });
+  // Destructured: the objects also hold refs, which must not be read while rendering.
+  const { setNodeRef, setActivatorNodeRef, listeners, isDragging } = useDraggable({
+    id: `card:${cardId}`,
+    disabled: readOnly,
+  });
+  const { setNodeRef: setDropRef } = useDroppable({ id: `drop-card:${cardId}`, disabled: readOnly });
   const lifted = drag?.kind === "card" && drag.cardId === cardId;
 
   const ringColor = draggedBy?.user.color ?? focusedBy[0]?.user.color;
@@ -54,7 +58,7 @@ export function Card({ client, cardId, pending, highlight, focusedBy, draggedBy,
     highlight && `is-${highlight}`,
     ringColor && "has-peer",
     lifted && "is-lifted",
-    draggable.isDragging && "is-placeholder",
+    isDragging && "is-placeholder",
   ]
     .filter(Boolean)
     .join(" ");
@@ -62,8 +66,8 @@ export function Card({ client, cardId, pending, highlight, focusedBy, draggedBy,
   return (
     <li
       ref={(el) => {
-        draggable.setNodeRef(el);
-        droppable.setNodeRef(el);
+        setNodeRef(el);
+        setDropRef(el);
       }}
       className={className}
       aria-busy={pending}
@@ -81,8 +85,8 @@ export function Card({ client, cardId, pending, highlight, focusedBy, draggedBy,
           <button
             type="button"
             className="drag-handle"
-            ref={draggable.setActivatorNodeRef}
-            {...draggable.listeners}
+            ref={setActivatorNodeRef}
+            {...listeners}
             data-drag-handle={cardId}
             aria-label={`Move ${title}`}
             aria-describedby="drag-help"

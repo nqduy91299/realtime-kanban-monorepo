@@ -49,7 +49,8 @@ export async function openAs(
   return { page, intentsSent, context, close: () => context.close() };
 }
 
-export const column = (page: Page, title: string) => page.locator(`section.column[aria-label="Column ${title}"]`);
+export const column = (page: Page, title: string) =>
+  page.locator(`section.column[aria-label="Column ${title}"]`);
 
 /**
  * A card, found by its drag handle's accessible name ("Move Fix bug"), which is what a screen reader
@@ -57,7 +58,9 @@ export const column = (page: Page, title: string) => page.locator(`section.colum
  * not an attribute.)
  */
 export function card(page: Page, title: string) {
-  return page.locator("li.card").filter({ has: page.getByRole("button", { name: `Move ${title}`, exact: true }) });
+  return page
+    .locator("li.card")
+    .filter({ has: page.getByRole("button", { name: `Move ${title}`, exact: true }) });
 }
 
 export async function addCard(page: Page, columnTitle: string, title: string): Promise<void> {
@@ -94,7 +97,9 @@ export async function serviceWorkerReady(page: Page): Promise<void> {
   await page.evaluate(async () => {
     await navigator.serviceWorker.ready;
     if (!navigator.serviceWorker.controller) {
-      await new Promise((r) => navigator.serviceWorker.addEventListener("controllerchange", r, { once: true }));
+      await new Promise((r) =>
+        navigator.serviceWorker.addEventListener("controllerchange", r, { once: true }),
+      );
     }
   });
 }

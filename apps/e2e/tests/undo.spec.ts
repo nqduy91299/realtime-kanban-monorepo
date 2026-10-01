@@ -1,7 +1,9 @@
 import { expect, test } from "@playwright/test";
 import { addCard, cardById, handleIdOf, newBoardId, openAs, settled, titlesIn } from "./helpers.js";
 
-test("U1/U7: a whole keyboard drag is one undo step; shortcut and toolbar both work; redo too", async ({ browser }) => {
+test("U1/U7: a whole keyboard drag is one undo step; shortcut and toolbar both work; redo too", async ({
+  browser,
+}) => {
   const { page } = await openAs(browser, "Alice", newBoardId());
   await addCard(page, "To do", "Task");
   await settled(page);
@@ -72,6 +74,8 @@ test("U4: undo is refused if someone moved the card after me", async ({ browser 
   await expect.poll(() => titlesIn(alice.page, "Done")).toEqual(["Contested"]);
 
   await alice.page.getByRole("button", { name: "↶ Undo" }).click();
-  await expect(alice.page.locator(".toast").last()).toHaveText("Couldn't undo: someone changed “Contested” after you.");
+  await expect(alice.page.locator(".toast").last()).toHaveText(
+    "Couldn't undo: someone changed “Contested” after you.",
+  );
   expect(await titlesIn(alice.page, "Done")).toEqual(["Contested"]);
 });

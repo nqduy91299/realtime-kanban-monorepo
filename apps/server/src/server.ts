@@ -1,6 +1,6 @@
 import { createServer as createHttpServer } from "node:http";
 import type { AddressInfo } from "node:net";
-import { WebSocketServer, type WebSocket } from "ws";
+import { WebSocketServer, type RawData, type WebSocket } from "ws";
 import * as Y from "yjs";
 import { applyAwarenessUpdate } from "y-protocols/awareness";
 import {
@@ -32,6 +32,15 @@ export interface RunningServer {
 }
 
 const BOARD_PATH = /^\/boards\/([\w-]{1,64})$/;
+
+/**
+ * `ws` hands a message over as a Buffer, an ArrayBuffer, or a Buffer[] (a fragmented message).
+ * `String(arrayBuffer)` would give "[object ArrayBuffer]", so decode each shape explicitly.
+ */
+function textOf(data: RawData): string {
+  if (Array.isArray(data)) return Buffer.concat(data).toString("utf8");
+  return (Buffer.isBuffer(data) ? data : Buffer.from(data)).toString("utf8");
+}
 
 export async function createServer({ port = 0, dbPath, dev = false }: ServerOptions): Promise<RunningServer> {
   const store = new Store(dbPath);
@@ -91,7 +100,7 @@ export async function createServer({ port = 0, dbPath, dev = false }: ServerOpti
     ws.on("message", (data) => {
       let message: ClientMessage;
       try {
-        message = clientMessageSchema.parse(JSON.parse(String(data)));
+        message = clientMessageSchema.parse(JSON.parse(textOf(data)));
       } catch {
         conn.send({ t: "error", code: "BAD_MESSAGE" });
         return;
@@ -154,7 +163,12 @@ export async function createServer({ port = 0, dbPath, dev = false }: ServerOpti
 
     const previous = store.intentResult(room.id, id);
     if (previous) {
-      reply(room, conn, id, previous.code === null ? { ok: true, changes: [] } : { ok: false, code: previous.code });
+      reply(
+        room,
+        conn,
+        id,
+        previous.code === null ? { ok: true, changes: [] } : { ok: false, code: previous.code },
+      );
       return;
     }
 
@@ -183,7 +197,12 @@ export async function createServer({ port = 0, dbPath, dev = false }: ServerOpti
       return;
     }
     if (result.ok) conn.send({ t: "ack", id });
-    else conn.send(result.message ? { t: "nack", id, code: result.code, message: result.message } : { t: "nack", id, code: result.code });
+    else
+      conn.send(
+        result.message
+          ? { t: "nack", id, code: result.code, message: result.message }
+          : { t: "nack", id, code: result.code },
+      );
   }
 
   await new Promise<void>((resolve) => http.listen(port, resolve));

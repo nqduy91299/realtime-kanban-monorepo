@@ -25,7 +25,8 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const request = event.request;
   const url = new URL(request.url);
-  if (request.method !== "GET" || url.origin !== self.location.origin || url.pathname.startsWith("/boards")) return;
+  if (request.method !== "GET" || url.origin !== self.location.origin || url.pathname.startsWith("/boards"))
+    return;
 
   const key = request.mode === "navigate" ? "/" : request;
   event.respondWith(

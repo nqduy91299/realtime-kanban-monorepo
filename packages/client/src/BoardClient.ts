@@ -365,7 +365,15 @@ export class BoardClient {
     return () => this.awareness.off("change", listener);
   }
 
-  private onAwarenessChange = ({ added, updated, removed }: { added: number[]; updated: number[]; removed: number[] }): void => {
+  private onAwarenessChange = ({
+    added,
+    updated,
+    removed,
+  }: {
+    added: number[];
+    updated: number[];
+    removed: number[];
+  }): void => {
     // Our own cursor moving shouldn't produce a new peers array (and a React re-render).
     if ([...added, ...updated, ...removed].every((id) => id === this.awareness.clientID)) return;
     const peers: Peer[] = [];
@@ -528,7 +536,9 @@ export class BoardClient {
       case "nack":
         this.settle(
           message.id,
-          message.message === undefined ? { code: message.code } : { code: message.code, message: message.message },
+          message.message === undefined
+            ? { code: message.code }
+            : { code: message.code, message: message.message },
         );
         return;
       case "error":

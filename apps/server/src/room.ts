@@ -71,7 +71,10 @@ export class Room {
       for (const id of [...added, ...updated]) from.awarenessIds.add(id);
       for (const id of removed) from.awarenessIds.delete(id);
     }
-    const message: ServerMessage = { t: "awareness", update: toBase64(encodeAwarenessUpdate(this.awareness, changed)) };
+    const message: ServerMessage = {
+      t: "awareness",
+      update: toBase64(encodeAwarenessUpdate(this.awareness, changed)),
+    };
     for (const conn of this.connections) {
       if (conn !== from) conn.send(message);
     }

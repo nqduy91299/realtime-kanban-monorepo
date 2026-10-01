@@ -6,7 +6,9 @@ const dbPath = process.env.DB_PATH ?? "kanban.sqlite";
 const dev = process.env.NODE_ENV !== "production";
 
 const server = await createServer({ port, dbPath, dev });
-console.log(`kanban server on ws://localhost:${server.port}/boards/<id> (db: ${dbPath}${dev ? ", dev mode" : ""})`);
+console.log(
+  `kanban server on ws://localhost:${server.port}/boards/<id> (db: ${dbPath}${dev ? ", dev mode" : ""})`,
+);
 
 for (const signal of ["SIGINT", "SIGTERM"] as const) {
   process.on(signal, () => {

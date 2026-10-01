@@ -44,15 +44,32 @@ function visible(state: BoardState) {
 
 describe("invertIntent", () => {
   const step = fc.oneof(
-    fc.record({ name: fc.constant("moveCard" as const), card: fc.constantFrom("a", "b", "c"), column: fc.constantFrom("todo", "doing", "done"), index: fc.nat(3) }),
-    fc.record({ name: fc.constant("createCard" as const), column: fc.constantFrom("todo", "doing", "done"), index: fc.nat(3) }),
+    fc.record({
+      name: fc.constant("moveCard" as const),
+      card: fc.constantFrom("a", "b", "c"),
+      column: fc.constantFrom("todo", "doing", "done"),
+      index: fc.nat(3),
+    }),
+    fc.record({
+      name: fc.constant("createCard" as const),
+      column: fc.constantFrom("todo", "doing", "done"),
+      index: fc.nat(3),
+    }),
     fc.record({ name: fc.constant("deleteCard" as const), card: fc.constantFrom("a", "b", "c", "x") }),
     fc.record({ name: fc.constant("restoreCard" as const), card: fc.constantFrom("a", "x") }),
     fc.record({ name: fc.constant("createColumn" as const), index: fc.nat(4) }),
-    fc.record({ name: fc.constant("moveColumn" as const), column: fc.constantFrom("todo", "doing", "done"), index: fc.nat(3) }),
+    fc.record({
+      name: fc.constant("moveColumn" as const),
+      column: fc.constantFrom("todo", "doing", "done"),
+      index: fc.nat(3),
+    }),
     fc.record({ name: fc.constant("deleteColumn" as const), column: fc.constantFrom("done", "old", "todo") }),
     fc.record({ name: fc.constant("restoreColumn" as const), column: fc.constantFrom("old", "done") }),
-    fc.record({ name: fc.constant("setWipLimit" as const), column: fc.constantFrom("todo", "doing"), limit: fc.option(fc.integer({ min: 1, max: 5 }), { nil: null }) }),
+    fc.record({
+      name: fc.constant("setWipLimit" as const),
+      column: fc.constantFrom("todo", "doing"),
+      limit: fc.option(fc.integer({ min: 1, max: 5 }), { nil: null }),
+    }),
   );
 
   type Step = typeof step extends fc.Arbitrary<infer T> ? T : never;
@@ -60,16 +77,25 @@ describe("invertIntent", () => {
   function build(state: BoardState, s: Step, n: number): IntentBody {
     switch (s.name) {
       case "moveCard":
-        return { name: "moveCard", args: { cardId: s.card, columnId: s.column, order: cardOrderAt(state, s.column, s.index, s.card) } };
+        return {
+          name: "moveCard",
+          args: { cardId: s.card, columnId: s.column, order: cardOrderAt(state, s.column, s.index, s.card) },
+        };
       case "createCard":
-        return { name: "createCard", args: { cardId: `new${n}`, columnId: s.column, order: cardOrderAt(state, s.column, s.index) } };
+        return {
+          name: "createCard",
+          args: { cardId: `new${n}`, columnId: s.column, order: cardOrderAt(state, s.column, s.index) },
+        };
       case "deleteCard":
       case "restoreCard":
         return { name: s.name, args: { cardId: s.card } };
       case "createColumn":
         return { name: "createColumn", args: { columnId: `col${n}`, order: columnOrderAt(state, s.index) } };
       case "moveColumn":
-        return { name: "moveColumn", args: { columnId: s.column, order: columnOrderAt(state, s.index, s.column) } };
+        return {
+          name: "moveColumn",
+          args: { columnId: s.column, order: columnOrderAt(state, s.index, s.column) },
+        };
       case "deleteColumn":
       case "restoreColumn":
         return { name: s.name, args: { columnId: s.column } };
@@ -108,17 +134,25 @@ describe("invertIntent", () => {
     const before = board();
     const mine: IntentBody = { name: "moveCard", args: { cardId: "a", columnId: "doing", order: "a5" } };
     const afterMine = apply(before, mine)!;
-    const theirs = apply(afterMine, { name: "moveCard", args: { cardId: "a", columnId: "done", order: "a0" } })!;
+    const theirs = apply(afterMine, {
+      name: "moveCard",
+      args: { cardId: "a", columnId: "done", order: "a0" },
+    })!;
     const { undo } = invertIntent(before, mine)!;
     expect(runIntent(theirs, undo, editor)).toEqual({ ok: false, code: "STALE" });
     // Someone else moving a *different* card doesn't block it.
-    const unrelated = apply(afterMine, { name: "moveCard", args: { cardId: "b", columnId: "done", order: "a0" } })!;
+    const unrelated = apply(afterMine, {
+      name: "moveCard",
+      args: { cardId: "b", columnId: "done", order: "a0" },
+    })!;
     expect(runIntent(unrelated, undo, editor).ok).toBe(true);
   });
 
   it("returns null for changes that did nothing", () => {
     expect(invertIntent(board(), { name: "deleteCard", args: { cardId: "x" } })).toBeNull();
     expect(invertIntent(board(), { name: "restoreCard", args: { cardId: "a" } })).toBeNull();
-    expect(invertIntent(board(), { name: "setWipLimit", args: { columnId: "doing", wipLimit: 3 } })).toBeNull();
+    expect(
+      invertIntent(board(), { name: "setWipLimit", args: { columnId: "doing", wipLimit: 3 } }),
+    ).toBeNull();
   });
 });

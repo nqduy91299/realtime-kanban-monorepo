@@ -24,7 +24,7 @@ export function loadName(): string {
   } catch {
     // storage blocked: fall through to a random name
   }
-  const pick = <T,>(list: T[]) => list[Math.floor(Math.random() * list.length)]!;
+  const pick = <T>(list: T[]) => list[Math.floor(Math.random() * list.length)]!;
   const name = `${pick(ADJECTIVES)} ${pick(ANIMALS)}`;
   saveName(name);
   return name;

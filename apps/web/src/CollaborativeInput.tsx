@@ -46,7 +46,9 @@ export function CollaborativeInput({ text, ...inputProps }: Props) {
       }
       if (missed.length > 0) {
         // Remote text arrived meanwhile: show the merged result, caret after what we just typed.
-        const caret = edit ? missed.reduce((i, d) => transformIndex(i, d), edit.index) + edit.insert.length : input.selectionStart ?? 0;
+        const caret = edit
+          ? missed.reduce((i, d) => transformIndex(i, d), edit.index) + edit.insert.length
+          : (input.selectionStart ?? 0);
         input.value = text.toString();
         input.setSelectionRange(caret, caret);
         missed = [];

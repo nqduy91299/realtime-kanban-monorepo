@@ -31,7 +31,9 @@ test("O1/O2: with a slow network the card moves at once and shows Saving… unti
   await expect.poll(() => titlesIn(bob.page, "Doing")).toEqual(["Write docs"]);
 });
 
-test("O4/O8: a change the server rejects snaps back with a toast, and the card flashes", async ({ browser }) => {
+test("O4/O8: a change the server rejects snaps back with a toast, and the card flashes", async ({
+  browser,
+}) => {
   const alice = await openAs(browser, "Alice", newBoardId());
   const { page } = alice;
   await addCard(page, "To do", "Fix bug");
