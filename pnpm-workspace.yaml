@@ -1,0 +1,7 @@
+packages:
+  - "packages/*"
+  - "apps/*"
+
+# esbuild (used by Vite and tsx) needs its install script to place the platform binary.
+allowBuilds:
+  esbuild: true

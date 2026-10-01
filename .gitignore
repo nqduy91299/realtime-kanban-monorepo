@@ -1,0 +1,8 @@
+node_modules
+dist
+coverage
+*.sqlite
+.DS_Store
+dist-e2e
+test-results
+playwright-report

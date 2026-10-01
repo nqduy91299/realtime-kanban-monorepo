@@ -1,0 +1,16 @@
+{
+  "name": "kanban-monorepo",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm --parallel --filter @kanban/server --filter @kanban/web dev",
+    "dev:server": "pnpm --filter @kanban/server dev",
+    "dev:web": "pnpm --filter @kanban/web dev",
+    "test": "pnpm --filter '!@kanban/e2e' -r test",
+    "typecheck": "pnpm -r typecheck",
+    "e2e": "pnpm --filter @kanban/e2e test"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

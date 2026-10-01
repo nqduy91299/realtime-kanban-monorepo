@@ -1,0 +1,528 @@
+:root {
+  --bg: #f3f5f8;
+  --surface: #ffffff;
+  --surface-2: #e9edf2;
+  --ink: #141b26;
+  --muted: #5a6677;
+  --line: #d6dce5;
+  --ok: #1f6f31; /* ≥ 4.5:1 on --ok-soft (axe, K12) */
+  --ok-soft: #e1f2e4;
+  --warn: #8a460b; /* ≥ 4.5:1 on --warn-soft (axe, K12) */
+  --warn-soft: #f8e8d8;
+  --bad: #c92a2a;
+  --bad-soft: #fbe3e3;
+  --focus: #1864ab;
+  --remote: #1864ab;
+  --remote-soft: #e3effa;
+  color-scheme: light;
+  font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f141b;
+    --surface: #161d27;
+    --surface-2: #1e2733;
+    --ink: #e6eaf0;
+    --muted: #98a4b5;
+    --line: #2c3646;
+    --ok: #51cf66;
+    --ok-soft: #13301a;
+    --warn: #e8994f;
+    --warn-soft: #35240f;
+    --bad: #ff6b6b;
+    --bad-soft: #3a1717;
+    --focus: #4dabf7;
+    --remote: #4dabf7;
+    --remote-soft: #14283d;
+    color-scheme: dark;
+  }
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+}
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.app {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px 16px;
+  display: grid;
+  gap: 20px;
+}
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.bar h1 {
+  font-size: 20px;
+  margin: 0;
+  margin-right: auto;
+}
+.status,
+.role {
+  font: 500 12px/1 ui-monospace, Menlo, monospace;
+  padding: 6px 10px;
+  border-radius: 99px;
+}
+.status-online {
+  background: var(--ok-soft);
+  color: var(--ok);
+}
+.status-connecting,
+.status-syncing {
+  background: var(--warn-soft);
+  color: var(--warn);
+}
+.status-offline {
+  background: var(--bad-soft);
+  color: var(--bad);
+}
+.role {
+  background: var(--surface-2);
+  color: var(--muted);
+}
+.board {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+.column {
+  background: var(--surface-2);
+  border-radius: 10px;
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+.column-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.column-title {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 4px 6px;
+}
+.column-title:hover {
+  border-color: var(--line);
+}
+.column-title:focus {
+  background: var(--surface);
+  border-color: var(--line);
+}
+.count {
+  font: 500 12px/1 ui-monospace, Menlo, monospace;
+  color: var(--muted);
+}
+.hint {
+  color: var(--muted);
+  font-size: 13px;
+}
+code {
+  font-family: ui-monospace, Menlo, monospace;
+}
+
+button,
+input {
+  font: inherit;
+  color: inherit;
+}
+button {
+  cursor: pointer;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 6px;
+  padding: 4px 8px;
+}
+button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+button.danger {
+  color: var(--bad);
+}
+.mono {
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 12px;
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.count.is-full {
+  color: var(--bad);
+  font-weight: 700;
+}
+
+/* cards */
+.cards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px;
+  display: grid;
+  gap: 6px;
+  transition: background-color 0.4s, border-color 0.4s;
+}
+.card-title {
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  padding: 2px 4px;
+}
+.card-title:focus {
+  border-color: var(--line);
+}
+/* O2: waiting for the server */
+.is-pending {
+  border-style: dashed;
+  border-color: var(--warn);
+}
+.saving {
+  font: 500 11px/1 ui-monospace, Menlo, monospace;
+  color: var(--warn);
+}
+/* O4: rejected and returned */
+.is-rolled-back {
+  animation: rolled-back 1.2s ease-out;
+}
+@keyframes rolled-back {
+  from {
+    background: var(--bad-soft);
+    border-color: var(--bad);
+  }
+}
+/* C4: moved by someone else */
+.is-remote {
+  animation: remote 1.2s ease-out;
+}
+@keyframes remote {
+  from {
+    background: var(--remote-soft);
+    border-color: var(--remote);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .is-rolled-back,
+  .is-remote {
+    animation: none;
+    outline: 2px solid var(--bad);
+  }
+  .is-remote {
+    outline-color: var(--remote);
+  }
+}
+
+/* forms */
+.add-card {
+  display: flex;
+  gap: 6px;
+}
+.add-card input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 4px 8px;
+  background: var(--surface);
+}
+.column-tools {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--muted);
+}
+.column-tools input {
+  width: 4.5em;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 2px 6px;
+  background: var(--surface);
+}
+.column-tools button {
+  font-size: 12px;
+  padding: 2px 7px;
+}
+.add-column {
+  align-self: start;
+  padding: 12px;
+  border-style: dashed;
+  background: transparent;
+  color: var(--muted);
+}
+
+/* toasts */
+.toasts {
+  position: fixed;
+  right: 16px;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  display: grid;
+  gap: 8px;
+  max-width: min(420px, calc(100vw - 32px));
+  z-index: 10;
+}
+.toast {
+  background: var(--ink);
+  color: var(--bg);
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+}
+
+/* dev panel */
+.dev {
+  border: 1px dashed var(--warn);
+  border-radius: 8px;
+  padding: 8px 12px;
+  background: var(--warn-soft);
+  font-size: 13px;
+}
+.dev summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--warn);
+}
+.dev-body {
+  display: grid;
+  gap: 8px;
+  padding-top: 8px;
+  max-width: 420px;
+}
+.dev-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.dev-body p {
+  margin: 0;
+}
+
+/* presence (M3) */
+.board {
+  position: relative;
+}
+.presence {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.you {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.you input {
+  width: 9em;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 3px 8px;
+  background: var(--surface);
+}
+.avatars {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font: 600 11px/1 system-ui, sans-serif;
+  border: 2px solid var(--bg);
+}
+.avatars .avatar + .avatar {
+  margin-left: -6px;
+}
+/* P3: someone else has this focused */
+.card.has-peer,
+.column.has-peer {
+  box-shadow: 0 0 0 2px var(--peer);
+}
+.card,
+.column {
+  position: relative;
+}
+.peer-tags {
+  position: absolute;
+  top: -9px;
+  right: 8px;
+  display: flex;
+  gap: 4px;
+  z-index: 1;
+}
+.peer-tag,
+.moving,
+.cursor-name {
+  color: #fff;
+  font: 500 11px/1 system-ui, sans-serif;
+  padding: 3px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+.moving {
+  justify-self: start;
+}
+/* P2: other people's pointers */
+.cursors {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 5;
+}
+.cursor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 2px;
+  transition: transform 80ms linear;
+}
+.cursor-name {
+  margin-top: 12px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .cursor {
+    transition: none;
+  }
+}
+
+/* offline (M4) */
+.offline-banner {
+  background: var(--warn-soft);
+  color: var(--ink);
+  border: 1px solid var(--warn);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 14px;
+}
+.unavailable {
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  padding: 24px;
+  text-align: center;
+  color: var(--muted);
+}
+.unavailable h2 {
+  margin: 0 0 6px;
+  font-size: 18px;
+  color: var(--ink);
+}
+.unavailable p {
+  margin: 0;
+}
+
+/* drag and drop (M5) */
+.card-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.card-row .card-title {
+  flex: 1;
+  min-width: 0;
+}
+.drag-handle {
+  flex: none;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  cursor: grab;
+  padding: 2px 4px;
+  line-height: 1;
+  touch-action: none; /* lets a long press start a drag instead of scrolling */
+}
+.drag-handle:hover {
+  border-color: var(--line);
+}
+.drag-handle[aria-pressed="true"] {
+  background: var(--focus);
+  color: #fff;
+  cursor: grabbing;
+}
+.card-delete {
+  flex: none;
+  padding: 0 7px;
+  font-size: 13px;
+  border-color: transparent;
+  background: transparent;
+}
+/* K2: picked up with the keyboard */
+.card.is-lifted,
+.column.is-lifted {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  box-shadow: 0 10px 20px -12px rgba(0, 0, 0, 0.45);
+}
+.card.is-lifted {
+  transform: rotate(-1deg);
+}
+/* the card's slot while a pointer drags its overlay */
+.card.is-placeholder {
+  opacity: 0.35;
+}
+.drag-overlay {
+  box-shadow: 0 14px 28px -12px rgba(0, 0, 0, 0.5);
+  transform: rotate(-2deg);
+  cursor: grabbing;
+  padding: 10px 12px;
+}
+.count.is-over {
+  color: #fff;
+  background: var(--bad);
+  padding: 2px 6px;
+  border-radius: 99px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .card.is-lifted,
+  .drag-overlay {
+    transform: none;
+  }
+}
+
+/* undo (M6) */
+.undo-controls {
+  display: flex;
+  gap: 4px;
+}
+.undo-controls button {
+  font-size: 13px;
+  padding: 3px 8px;
+}
