@@ -15,7 +15,11 @@
   --remote: #1864ab;
   --remote-soft: #e3effa;
   color-scheme: light;
-  font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+  font:
+    15px/1.5 system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif;
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -69,7 +73,10 @@ body {
 }
 .status,
 .role {
-  font: 500 12px/1 ui-monospace, Menlo, monospace;
+  font:
+    500 12px/1 ui-monospace,
+    Menlo,
+    monospace;
   padding: 6px 10px;
   border-radius: 99px;
 }
@@ -128,7 +135,10 @@ body {
   border-color: var(--line);
 }
 .count {
-  font: 500 12px/1 ui-monospace, Menlo, monospace;
+  font:
+    500 12px/1 ui-monospace,
+    Menlo,
+    monospace;
   color: var(--muted);
 }
 .hint {
@@ -190,7 +200,9 @@ button.danger {
   padding: 8px;
   display: grid;
   gap: 6px;
-  transition: background-color 0.4s, border-color 0.4s;
+  transition:
+    background-color 0.4s,
+    border-color 0.4s;
 }
 .card-title {
   width: 100%;
@@ -208,7 +220,10 @@ button.danger {
   border-color: var(--warn);
 }
 .saving {
-  font: 500 11px/1 ui-monospace, Menlo, monospace;
+  font:
+    500 11px/1 ui-monospace,
+    Menlo,
+    monospace;
   color: var(--warn);
 }
 /* O4: rejected and returned */
@@ -363,7 +378,9 @@ button.danger {
   display: grid;
   place-items: center;
   color: #fff;
-  font: 600 11px/1 system-ui, sans-serif;
+  font:
+    600 11px/1 system-ui,
+    sans-serif;
   border: 2px solid var(--bg);
 }
 .avatars .avatar + .avatar {
@@ -390,7 +407,9 @@ button.danger {
 .moving,
 .cursor-name {
   color: #fff;
-  font: 500 11px/1 system-ui, sans-serif;
+  font:
+    500 11px/1 system-ui,
+    sans-serif;
   padding: 3px 6px;
   border-radius: 4px;
   white-space: nowrap;

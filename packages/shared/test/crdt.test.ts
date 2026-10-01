@@ -74,7 +74,9 @@ describe("S3 convergence (property test)", () => {
       fc.property(fc.array(op, { maxLength: 30 }), fc.integer(), (ops: Op[], seed) => {
         const docs = [new Y.Doc(), new Y.Doc(), new Y.Doc()];
         const updates: Uint8Array[][] = docs.map(() => []);
-        docs.forEach((d, i) => d.on("update", (u: Uint8Array, origin) => origin !== "net" && updates[i]!.push(u)));
+        docs.forEach((d, i) =>
+          d.on("update", (u: Uint8Array, origin) => origin !== "net" && updates[i]!.push(u)),
+        );
 
         // Each replica edits in isolation (as if everyone were offline).
         for (const o of ops) {

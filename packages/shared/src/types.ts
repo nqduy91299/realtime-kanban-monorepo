@@ -20,8 +20,7 @@ export interface BoardState {
 }
 
 export type Change =
-  | { kind: "column"; id: string; value: ColumnValue }
-  | { kind: "card"; id: string; value: CardValue };
+  { kind: "column"; id: string; value: ColumnValue } | { kind: "card"; id: string; value: CardValue };
 
 /** Server rules R1–R9 (docs/TRUTH_TABLE.md §4). */
 export type RejectCode =
@@ -37,8 +36,7 @@ export type RejectCode =
   | "DEV_REJECT";
 
 export type MutationResult =
-  | { ok: true; changes: Change[] }
-  | { ok: false; code: RejectCode; message?: string };
+  { ok: true; changes: Change[] } | { ok: false; code: RejectCode; message?: string };
 
 export interface MutationContext {
   role: Role;

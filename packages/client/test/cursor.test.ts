@@ -9,13 +9,21 @@ describe("P2 cursor anchoring", () => {
     const bob = { left: 40, top: 80, width: 200, height: 60 };
     const { x, y } = toRelative(alice, 250, 65); // halfway across, a quarter down
     expect({ x, y }).toEqual({ x: 0.5, y: 0.25 });
-    expect(fromRelative(bob, { left: 0, top: 0, width: 800, height: 600 }, x, y)).toEqual({ left: 140, top: 95 });
+    expect(fromRelative(bob, { left: 0, top: 0, width: 800, height: 600 }, x, y)).toEqual({
+      left: 140,
+      top: 95,
+    });
   });
 
   it("round-trips any point inside the element (property)", () => {
     fc.assert(
       fc.property(
-        fc.record({ left: fc.integer({ min: -500, max: 500 }), top: fc.integer({ min: -500, max: 500 }), width: fc.integer({ min: 1, max: 900 }), height: fc.integer({ min: 1, max: 900 }) }),
+        fc.record({
+          left: fc.integer({ min: -500, max: 500 }),
+          top: fc.integer({ min: -500, max: 500 }),
+          width: fc.integer({ min: 1, max: 900 }),
+          height: fc.integer({ min: 1, max: 900 }),
+        }),
         fc.double({ min: 0, max: 1, noNaN: true }),
         fc.double({ min: 0, max: 1, noNaN: true }),
         (rect, fx, fy) => {

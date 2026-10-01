@@ -7,7 +7,10 @@ const NO_PEERS: readonly Peer[] = [];
 
 /** Everyone else on the board (P1), re-rendering only when their presence changes. */
 export function usePeers(client: BoardClient | null): readonly Peer[] {
-  const subscribe = useCallback((listener: () => void) => client?.onPresence(listener) ?? (() => {}), [client]);
+  const subscribe = useCallback(
+    (listener: () => void) => client?.onPresence(listener) ?? (() => {}),
+    [client],
+  );
   return useSyncExternalStore(subscribe, () => client?.getPeers() ?? NO_PEERS);
 }
 
@@ -30,7 +33,11 @@ export function useIdentity(client: BoardClient | null) {
  */
 export function useBoardPresence(client: BoardClient | null, boardRef: RefObject<HTMLElement | null>) {
   const sendCursor = useMemo(
-    () => throttle((cursor: { anchor: string; x: number; y: number } | null) => client?.setPresence({ cursor }), 50),
+    () =>
+      throttle(
+        (cursor: { anchor: string; x: number; y: number } | null) => client?.setPresence({ cursor }),
+        50,
+      ),
     [client],
   );
   useEffect(() => () => sendCursor.cancel(), [sendCursor]);
@@ -45,7 +52,10 @@ export function useBoardPresence(client: BoardClient | null, boardRef: RefObject
     const onMove = (event: PointerEvent) => {
       const anchor = anchorOf(event.target);
       const rect = (anchor ?? board).getBoundingClientRect();
-      sendCursor({ anchor: anchor?.dataset.anchor ?? "board", ...toRelative(rect, event.clientX, event.clientY) });
+      sendCursor({
+        anchor: anchor?.dataset.anchor ?? "board",
+        ...toRelative(rect, event.clientX, event.clientY),
+      });
     };
     const onLeave = () => sendCursor(null);
 

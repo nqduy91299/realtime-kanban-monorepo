@@ -7,14 +7,14 @@ Built to learn, and to be able to answer "design a collaborative editor" from ex
 behavior is specified first in [`docs/TRUTH_TABLE.md`](docs/TRUTH_TABLE.md) (about 80 rows, each with an
 ID like `C4` or `U4`), and every row is covered by a test named after it.
 
-| Feature | How | Rows |
-|---|---|---|
-| Several people editing at once | Yjs CRDT for text, server-validated intents for structure, over one WebSocket | S, C |
-| Optimistic updates with rollback | the screen shows `confirmed state + pending changes`; a rejection just removes one | O, R |
-| Presence | avatars, live cursors anchored to cards, focus rings, "Alice is moving…" | P |
-| Works offline | IndexedDB for both docs and the outbox, a service worker for the app shell | F |
-| Keyboard drag and drop | Space · arrows · Space / Esc, with screen-reader announcements; mouse and touch too | K |
-| Undo / redo | undo is itself a validated change that refuses to overwrite newer work; per-field text undo | U |
+| Feature                          | How                                                                                         | Rows |
+| -------------------------------- | ------------------------------------------------------------------------------------------- | ---- |
+| Several people editing at once   | Yjs CRDT for text, server-validated intents for structure, over one WebSocket               | S, C |
+| Optimistic updates with rollback | the screen shows `confirmed state + pending changes`; a rejection just removes one          | O, R |
+| Presence                         | avatars, live cursors anchored to cards, focus rings, "Alice is moving…"                    | P    |
+| Works offline                    | IndexedDB for both docs and the outbox, a service worker for the app shell                  | F    |
+| Keyboard drag and drop           | Space · arrows · Space / Esc, with screen-reader announcements; mouse and touch too         | K    |
+| Undo / redo                      | undo is itself a validated change that refuses to overwrite newer work; per-field text undo | U    |
 
 ## Run it
 
@@ -24,6 +24,9 @@ pnpm dev            # server on :4000, web on :5173 → open http://localhost:51
 pnpm test           # unit + integration (Node, ~10 s)
 pnpm e2e            # end-to-end in your installed Google Chrome (starts its own servers on other ports)
 pnpm typecheck
+pnpm lint           # ESLint (type-aware, React hooks, jsx-a11y)
+pnpm format         # Prettier
+pnpm check          # format check + lint + typecheck + test: run before pushing
 ```
 
 `?board=<name>` opens another board. `&role=viewer` makes a read-only viewer. In development there's a
@@ -56,7 +59,7 @@ apps/web          React UI (Vite)
 apps/e2e          Playwright tests in real Chrome
 ```
 
-## Why a CRDT, and why not *only* a CRDT
+## Why a CRDT, and why not _only_ a CRDT
 
 ### What last-write-wins gets wrong
 
@@ -88,7 +91,7 @@ A Kanban board has rules that need someone who can say no:
 - A column can only be deleted when it's empty (`R4`).
 - Viewers can't edit (`R1`).
 
-Two people each moving a card into the last free slot of "Doing" is a *conflict of rules*, not of text.
+Two people each moving a card into the last free slot of "Doing" is a _conflict of rules_, not of text.
 Merging both would silently break the limit.
 
 There's also a subtler reason not to push rejections into Yjs. Updates from one Yjs client form a chain
@@ -97,9 +100,9 @@ stuck.
 
 ### So the data is split by how it should merge (decision D1)
 
-| Data | Strategy | On conflict |
-|---|---|---|
-| **Text**: card and column titles | Yjs CRDT, sent as Yjs updates | both edits merge; nothing is ever rejected |
+| Data                                                                 | Strategy                                                                 | On conflict                                                                          |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
+| **Text**: card and column titles                                     | Yjs CRDT, sent as Yjs updates                                            | both edits merge; nothing is ever rejected                                           |
 | **Structure**: which cards exist, their column and order, WIP limits | named **intents** (`moveCard`, `deleteColumn` …) validated by the server | processed in server order: valid → applied; breaks a rule → rejected and rolled back |
 
 Structure is, deliberately, **LWW per item in server order**. For a card's position that's the right
@@ -113,34 +116,34 @@ with authority where there are rules.**
 
 ## How conflicts are handled
 
-"At the same time" means neither person had seen the other's change. For structure, "first" means *first
-to reach the server*. Every row is a test.
+"At the same time" means neither person had seen the other's change. For structure, "first" means _first
+to reach the server_. Every row is a test.
 
-| | Alice | Bob, at the same time | Everyone ends up with | Mechanism |
-|---|---|---|---|---|
-| C1 | appends " now" to a title | prepends "Urgent: " | `Urgent: Fix bug now` | CRDT merge |
-| C2 | types X at position 3 | types Y at position 3 | both, same order everywhere | CRDT tie-break |
-| C3 | deletes a word | types inside that word | Bob's letters survive | CRDT |
-| C4 | moves card X → Doing | moves card X → Done | the later move wins; X never duplicated or lost; no popup, just a brief highlight | per-card LWW in server order |
-| C5 | moves card X | edits X's title | both apply | text and structure are independent |
-| C6 | deletes card X | edits X's title | X hidden (soft delete); Bob's edit kept; undo brings X back *with* the edit | soft delete + separate text doc |
-| C7 | deletes card X | moves card X | if the delete comes first, the move is rolled back (`CARD_DELETED`) | server rule |
-| C8 | adds a card between P and Q | adds a card between P and Q | both, same order everywhere | fractional index, ties broken by id |
-| C9 | deletes empty column K | moves a card into K | the second one is rolled back | server rules R2 / R4 |
-| C10 | moves a card into Doing (1 slot left) | moves another card into Doing | first accepted, second rolled back: "Doing is full" | server rule R3 |
-| C11 | reorders column K | reorders column K | the later reorder wins | per-column LWW |
-| C12 | lowers Doing's WIP limit | moves a card into Doing | the second one is rolled back | server rules R3 / R5 |
+|     | Alice                                 | Bob, at the same time         | Everyone ends up with                                                             | Mechanism                           |
+| --- | ------------------------------------- | ----------------------------- | --------------------------------------------------------------------------------- | ----------------------------------- |
+| C1  | appends " now" to a title             | prepends "Urgent: "           | `Urgent: Fix bug now`                                                             | CRDT merge                          |
+| C2  | types X at position 3                 | types Y at position 3         | both, same order everywhere                                                       | CRDT tie-break                      |
+| C3  | deletes a word                        | types inside that word        | Bob's letters survive                                                             | CRDT                                |
+| C4  | moves card X → Doing                  | moves card X → Done           | the later move wins; X never duplicated or lost; no popup, just a brief highlight | per-card LWW in server order        |
+| C5  | moves card X                          | edits X's title               | both apply                                                                        | text and structure are independent  |
+| C6  | deletes card X                        | edits X's title               | X hidden (soft delete); Bob's edit kept; undo brings X back _with_ the edit       | soft delete + separate text doc     |
+| C7  | deletes card X                        | moves card X                  | if the delete comes first, the move is rolled back (`CARD_DELETED`)               | server rule                         |
+| C8  | adds a card between P and Q           | adds a card between P and Q   | both, same order everywhere                                                       | fractional index, ties broken by id |
+| C9  | deletes empty column K                | moves a card into K           | the second one is rolled back                                                     | server rules R2 / R4                |
+| C10 | moves a card into Doing (1 slot left) | moves another card into Doing | first accepted, second rolled back: "Doing is full"                               | server rule R3                      |
+| C11 | reorders column K                     | reorders column K             | the later reorder wins                                                            | per-column LWW                      |
+| C12 | lowers Doing's WIP limit              | moves a card into Doing       | the second one is rolled back                                                     | server rules R3 / R5                |
 
 ### Optimistic updates and rollback
 
 The same mutator functions run on both sides (`packages/shared/src/mutators.ts`): the client uses them
-to *predict*, the server to *decide*. The client never edits its confirmed state; it renders
+to _predict_, the server to _decide_. The client never edits its confirmed state; it renders
 
 ```
 view = confirmed state + replay(pending intents)
 ```
 
-- **Accepted:** the server broadcasts the new structure, and only *then* acks. The client already has
+- **Accepted:** the server broadcasts the new structure, and only _then_ acks. The client already has
   the result when it drops the intent, so nothing flickers (`O3`).
 - **Rejected:** the client drops the intent and recomputes. The card snaps back. That is the whole
   rollback, and it needs no special undo code (`O4`). Changes that depended on it fail too, and are
@@ -163,7 +166,7 @@ notice (`F1`).
 
 ### Undo is a change like any other
 
-Undo sends the reverse intent, carrying a precondition: "only if the card is still where *I* left it"
+Undo sends the reverse intent, carrying a precondition: "only if the card is still where _I_ left it"
 (`expect`). If someone moved it since, undo is refused instead of silently reverting their work (`U4`).
 Because it's validated like any change, it can also fail for normal reasons (a full column). A rejected
 change is removed from history. Inside a text field, Cmd/Ctrl+Z is a `Y.UndoManager` that tracks only
@@ -183,19 +186,20 @@ that field's own typing, so it never undoes someone else's words (`U5`).
 
 ## Testing
 
-| Level | Where | What |
-|---|---|---|
-| Unit | `packages/*/test` | rules (R1–R9), conflicts (C1–C12), CRDT properties, ordering, drag state machine and announcements, `invertIntent`, IndexedDB store |
-| Integration | `apps/server/test` | a real server and real WebSocket clients: sync, rollback, idempotency, presence, offline with a reload, undo between two users |
-| End-to-end | `apps/e2e` | Playwright in Chrome: visual pending/rollback, keyboard drag with announcements and focus, WebSocket frame counting ("one drag = one intent"), offline banner, service-worker reload, undo shortcuts, axe |
+| Level       | Where              | What                                                                                                                                                                                                      |
+| ----------- | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Unit        | `packages/*/test`  | rules (R1–R9), conflicts (C1–C12), CRDT properties, ordering, drag state machine and announcements, `invertIntent`, IndexedDB store                                                                       |
+| Integration | `apps/server/test` | a real server and real WebSocket clients: sync, rollback, idempotency, presence, offline with a reload, undo between two users                                                                            |
+| End-to-end  | `apps/e2e`         | Playwright in Chrome: visual pending/rollback, keyboard drag with announcements and focus, WebSocket frame counting ("one drag = one intent"), offline banner, service-worker reload, undo shortcuts, axe |
 
 Property tests (fast-check) cover convergence under random edits, offline toggles and delivery orders.
-They also check that *change → undo → redo* gives back exactly the before/after board for every intent
+They also check that _change → undo → redo_ gives back exactly the before/after board for every intent
 type. Each guarantee was also checked by breaking the code on purpose and watching the right test fail.
 For example: sending the ack before the update, dropping duplicate detection, reversing the saved
 outbox, and removing undo's precondition.
 
 The E2E suite found two bugs the other levels couldn't:
+
 - **Undo never recorded anything.** React StrictMode destroyed and reused a memoized object.
 - **Two color pairs failed WCAG contrast.**
 

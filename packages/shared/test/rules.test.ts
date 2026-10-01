@@ -49,16 +49,16 @@ describe("R2 a card must be in a live column", () => {
 describe("R3 WIP limit is a hard block", () => {
   // doing has limit 2 and holds b1
   it("accepts up to the limit, then rejects", () => {
-    let { state, result } = apply(board(), {
+    const first = apply(board(), {
       name: "moveCard",
       args: { cardId: "a1", columnId: "doing", order: "a1" },
     });
-    expect(codeOf(result)).toBe("OK");
-    ({ result } = apply(state, {
+    expect(codeOf(first.result)).toBe("OK");
+    const second = apply(first.state, {
       name: "moveCard",
       args: { cardId: "a2", columnId: "doing", order: "a2" },
-    }));
-    expect(codeOf(result)).toBe("WIP_LIMIT");
+    });
+    expect(codeOf(second.result)).toBe("WIP_LIMIT");
   });
 
   it("applies to createCard and restoreCard too", () => {
@@ -67,7 +67,13 @@ describe("R3 WIP limit is a hard block", () => {
       args: { cardId: "n1", columnId: "doing", order: "a1" },
     }).state;
     expect(
-      codeOf(runIntent(full, { name: "createCard", args: { cardId: "n2", columnId: "doing", order: "a2" } }, editor)),
+      codeOf(
+        runIntent(
+          full,
+          { name: "createCard", args: { cardId: "n2", columnId: "doing", order: "a2" } },
+          editor,
+        ),
+      ),
     ).toBe("WIP_LIMIT");
 
     full.cards.x9 = { columnId: "doing", order: "a3", deleted: true };
@@ -80,7 +86,13 @@ describe("R3 WIP limit is a hard block", () => {
     const state = board();
     state.columns.doing!.wipLimit = 1;
     expect(
-      codeOf(runIntent(state, { name: "moveCard", args: { cardId: "b1", columnId: "doing", order: "Zz" } }, editor)),
+      codeOf(
+        runIntent(
+          state,
+          { name: "moveCard", args: { cardId: "b1", columnId: "doing", order: "Zz" } },
+          editor,
+        ),
+      ),
     ).toBe("OK");
   });
 
@@ -88,15 +100,23 @@ describe("R3 WIP limit is a hard block", () => {
     const state = board();
     state.cards.x9 = { columnId: "doing", order: "a5", deleted: true };
     expect(
-      codeOf(runIntent(state, { name: "moveCard", args: { cardId: "a1", columnId: "doing", order: "a1" } }, editor)),
+      codeOf(
+        runIntent(
+          state,
+          { name: "moveCard", args: { cardId: "a1", columnId: "doing", order: "a1" } },
+          editor,
+        ),
+      ),
     ).toBe("OK");
   });
 
   it("null means unlimited", () => {
     let state = board();
     for (let i = 0; i < 20; i++) {
-      state = apply(state, { name: "createCard", args: { cardId: `n${i}`, columnId: "done", order: `a${i}` } })
-        .state;
+      state = apply(state, {
+        name: "createCard",
+        args: { cardId: `n${i}`, columnId: "done", order: `a${i}` },
+      }).state;
     }
     expect(Object.values(state.cards).filter((c) => c.columnId === "done")).toHaveLength(20);
   });
@@ -176,9 +196,9 @@ describe("R9 preconditions (used by undo)", () => {
   });
 
   it("works for column intents", () => {
-    expect(run({ name: "setWipLimit", args: { columnId: "doing", wipLimit: 3, expect: { wipLimit: 5 } } })).toBe(
-      "STALE",
-    );
+    expect(
+      run({ name: "setWipLimit", args: { columnId: "doing", wipLimit: 3, expect: { wipLimit: 5 } } }),
+    ).toBe("STALE");
   });
 });
 
@@ -210,9 +230,14 @@ describe("restoreColumn (undo of deleteColumn)", () => {
       ok: true,
       changes: [{ kind: "column", id: "old", value: { order: "a3", wipLimit: null, deleted: false } }],
     });
-    expect(runIntent(board(), { name: "restoreColumn", args: { columnId: "todo" } }, editor)).toEqual({ ok: true, changes: [] });
+    expect(runIntent(board(), { name: "restoreColumn", args: { columnId: "todo" } }, editor)).toEqual({
+      ok: true,
+      changes: [],
+    });
   });
   it("respects `expect`", () => {
-    expect(run({ name: "restoreColumn", args: { columnId: "old", expect: { deleted: false } } })).toBe("STALE");
+    expect(run({ name: "restoreColumn", args: { columnId: "old", expect: { deleted: false } } })).toBe(
+      "STALE",
+    );
   });
 });

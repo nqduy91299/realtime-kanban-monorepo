@@ -9,7 +9,9 @@ const settled = (...clients: BoardClient[]) =>
 
 function add(client: BoardClient, cardId: string, columnId = "todo") {
   const board = client.getView().board;
-  expect(client.mutate("createCard", { cardId, columnId, order: cardOrderAt(board, columnId, 99) }).ok).toBe(true);
+  expect(client.mutate("createCard", { cardId, columnId, order: cardOrderAt(board, columnId, 99) }).ok).toBe(
+    true,
+  );
 }
 function move(client: BoardClient, cardId: string, columnId: string) {
   const board = client.getView().board;
@@ -172,7 +174,9 @@ describe("undo, redo, undo round trip", () => {
     aliceUndo.undo();
     aliceUndo.undo(); // and the create
     await settled(alice);
-    await eventually(() => expect(Object.values(bob.getView().board.cards).every((c) => c.deleted)).toBe(true));
+    await eventually(() =>
+      expect(Object.values(bob.getView().board.cards).every((c) => c.deleted)).toBe(true),
+    );
     aliceUndo.redo(); // redo the create = restore
     await settled(alice);
     await eventually(() => expect(cardsIn(bob, "todo")).toEqual(["a1"]));

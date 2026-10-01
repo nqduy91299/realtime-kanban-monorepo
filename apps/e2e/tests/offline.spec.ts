@@ -21,7 +21,9 @@ test("F1/F2: losing the network shows the banner within 2 s; work continues and 
   await expect.poll(() => titlesIn(bob.page, "To do")).toEqual(["Written offline"]);
 });
 
-test("F3: with the production build, a reload with no network at all still shows the board", async ({ browser }) => {
+test("F3: with the production build, a reload with no network at all still shows the board", async ({
+  browser,
+}) => {
   const board = newBoardId();
   const alice = await openAs(browser, "Alice", board, { baseURL: "http://localhost:4273" });
   await addCard(alice.page, "To do", "Survives");

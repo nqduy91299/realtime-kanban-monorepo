@@ -17,7 +17,10 @@ describe("C4 concurrent moves of the same card", () => {
   });
 
   it("the card is never duplicated or lost", () => {
-    for (const order of [[toDoing, toDone], [toDone, toDoing]]) {
+    for (const order of [
+      [toDoing, toDone],
+      [toDone, toDoing],
+    ]) {
       const state = serverOrder(board(), order);
       const everywhere = sortedColumnIds(state).flatMap((col) => sortedCardIds(state, col));
       expect(everywhere.filter((id) => id === "a1")).toHaveLength(1);
@@ -67,7 +70,10 @@ describe("C9 delete an empty column vs move a card into it", () => {
 
 describe("C10 two moves into a column with one free slot", () => {
   it("the first is accepted, the second is rejected", () => {
-    const first = apply(board(), { name: "moveCard", args: { cardId: "a1", columnId: "doing", order: "a1" } });
+    const first = apply(board(), {
+      name: "moveCard",
+      args: { cardId: "a1", columnId: "doing", order: "a1" },
+    });
     const second = apply(first.state, {
       name: "moveCard",
       args: { cardId: "a2", columnId: "doing", order: "a2" },

@@ -22,7 +22,9 @@ async function boardWithCards(browser: Parameters<typeof openAs>[0]) {
   return { board, alice };
 }
 
-test("K1: Tab reaches a card handle; arrow keys move focus between cards like a grid", async ({ browser }) => {
+test("K1: Tab reaches a card handle; arrow keys move focus between cards like a grid", async ({
+  browser,
+}) => {
   const { alice } = await boardWithCards(browser);
   const { page } = alice;
   const ids = {
@@ -44,7 +46,9 @@ test("K1: Tab reaches a card handle; arrow keys move focus between cards like a 
   expect(outline).not.toBe("none");
 });
 
-test("K2–K5, K7: pick up, move with arrows (announced), drop = exactly one intent, focus stays", async ({ browser }) => {
+test("K2–K5, K7: pick up, move with arrows (announced), drop = exactly one intent, focus stays", async ({
+  browser,
+}) => {
   const { alice } = await boardWithCards(browser);
   const { page } = alice;
   const id = await handleIdOf(page, "One");
@@ -95,7 +99,9 @@ test("K8: columns reorder with the keyboard too", async ({ browser }) => {
   await page.keyboard.press("ArrowLeft");
   await page.keyboard.press("Space");
   await expect(announcement(page)).toHaveText("Dropped column Done at position 1 of 3.");
-  const order = await page.locator("section.column").evaluateAll((els) => els.map((e) => e.getAttribute("aria-label")));
+  const order = await page
+    .locator("section.column")
+    .evaluateAll((els) => els.map((e) => e.getAttribute("aria-label")));
   expect(order).toEqual(["Column Done", "Column To do", "Column Doing"]);
 });
 
@@ -115,7 +121,9 @@ test("K9 / P4: if someone deletes the card I'm dragging, the drag is cancelled a
   expect(alice.intentsSent).toEqual([]);
 });
 
-test("K10: when the server rejects a keyboard drop, the card returns and keeps focus", async ({ browser }) => {
+test("K10: when the server rejects a keyboard drop, the card returns and keeps focus", async ({
+  browser,
+}) => {
   const { alice } = await boardWithCards(browser);
   const { page } = alice;
   const id = await handleIdOf(page, "One");
@@ -153,7 +161,8 @@ test("K11: a mouse drag sends the same single intent", async ({ browser }) => {
 test("K12: no accessibility violations (axe), at rest and while dragging", async ({ browser }) => {
   const { alice } = await boardWithCards(browser);
   const { page } = alice;
-  const scan = () => new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
+  const scan = () =>
+    new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
 
   const atRest = await scan();
   expect(atRest.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target).join(", ")}`)).toEqual([]);

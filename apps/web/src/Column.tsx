@@ -26,7 +26,7 @@ export function Column({ client, view, columnId, highlights, focusedBy, draggedB
   const column = board.columns[columnId]!;
   const cardIds = sortedCardIds(board, columnId);
   const { drag, onHandleKey, onHandleBlur } = useDrag();
-  const droppable = useDroppable({ id: `drop-col:${columnId}`, disabled: readOnly });
+  const { setNodeRef: setDropRef } = useDroppable({ id: `drop-col:${columnId}`, disabled: readOnly });
   const lifted = drag?.kind === "column" && drag.columnId === columnId;
   const titleText = getText(client.content, textKey.columnTitle(columnId));
   const title = useYText(titleText).trim() || "Untitled";
@@ -38,7 +38,11 @@ export function Column({ client, view, columnId, highlights, focusedBy, draggedB
   const addCard = (event: FormEvent) => {
     event.preventDefault();
     const cardId = crypto.randomUUID();
-    const result = mutate("createCard", { cardId, columnId, order: cardOrderAt(board, columnId, cardIds.length) });
+    const result = mutate("createCard", {
+      cardId,
+      columnId,
+      order: cardOrderAt(board, columnId, cardIds.length),
+    });
     if (result.ok) {
       // The title goes into the text doc. If the create is rejected, this text is simply never shown.
       getText(client.content, textKey.cardTitle(cardId)).insert(0, draft.trim());
@@ -48,7 +52,8 @@ export function Column({ client, view, columnId, highlights, focusedBy, draggedB
 
   const setLimit = (raw: string) => {
     const wipLimit = raw.trim() === "" ? null : Number(raw);
-    if (wipLimit === column.wipLimit || (wipLimit !== null && !(Number.isInteger(wipLimit) && wipLimit >= 1))) return;
+    if (wipLimit === column.wipLimit || (wipLimit !== null && !(Number.isInteger(wipLimit) && wipLimit >= 1)))
+      return;
     mutate("setWipLimit", { columnId, wipLimit });
   };
 
@@ -65,7 +70,7 @@ export function Column({ client, view, columnId, highlights, focusedBy, draggedB
 
   return (
     <section
-      ref={droppable.setNodeRef}
+      ref={setDropRef}
       className={className}
       aria-label={`Column ${title}`}
       data-anchor={columnId}
@@ -87,7 +92,12 @@ export function Column({ client, view, columnId, highlights, focusedBy, draggedB
             ⠿
           </button>
         )}
-        <CollaborativeInput className="column-title" text={titleText} aria-label="Column title" readOnly={readOnly} />
+        <CollaborativeInput
+          className="column-title"
+          text={titleText}
+          aria-label="Column title"
+          readOnly={readOnly}
+        />
         <span className={over ? "count is-over" : full ? "count is-full" : "count"} title="Cards / WIP limit">
           {cardIds.length}
           {column.wipLimit !== null && ` / ${column.wipLimit}`}

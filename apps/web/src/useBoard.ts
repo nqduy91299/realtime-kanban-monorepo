@@ -1,5 +1,13 @@
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { BoardClient, IndexedDbStore, MemoryStore, type BoardView, type LocalStore, type Rejection, type Status } from "@kanban/client";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import {
+  BoardClient,
+  IndexedDbStore,
+  MemoryStore,
+  type BoardView,
+  type LocalStore,
+  type Rejection,
+  type Status,
+} from "@kanban/client";
 import type { Role } from "@kanban/shared";
 
 const EMPTY_VIEW: BoardView = { board: { columns: {}, cards: {} }, pending: new Set() };
@@ -25,6 +33,9 @@ export function useBoard(boardId: string, role: Role) {
     let alive = true;
     void next.ready.then(() => alive && setLoaded(true));
     next.connect();
+    // The effect creates the client (it owns a socket, so it can't be created during render),
+    // and the render needs it: storing it in state is the point. Runs once per board.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setClient(next);
     return () => {
       alive = false;
@@ -34,7 +45,10 @@ export function useBoard(boardId: string, role: Role) {
     };
   }, [boardId, role]);
 
-  const subscribe = useCallback((listener: () => void) => client?.subscribe(listener) ?? (() => {}), [client]);
+  const subscribe = useCallback(
+    (listener: () => void) => client?.subscribe(listener) ?? (() => {}),
+    [client],
+  );
   const view = useSyncExternalStore(subscribe, () => client?.getView() ?? EMPTY_VIEW);
 
   return { client, status, view, loaded };
@@ -47,9 +61,8 @@ export type Highlight = "rolled-back" | "remote";
  * O4: a card whose change was rejected flashes as it returns.
  * C4: a card moved by someone else gets a brief highlight instead of a notification.
  */
-export function useHighlights(client: BoardClient | null, view: BoardView): ReadonlyMap<string, Highlight> {
+export function useHighlights(client: BoardClient | null): ReadonlyMap<string, Highlight> {
   const [highlights, setHighlights] = useState<ReadonlyMap<string, Highlight>>(new Map());
-  const previous = useRef<BoardView>(view);
 
   const flash = useCallback((ids: string[], kind: Highlight) => {
     if (ids.length === 0) return;
@@ -64,21 +77,30 @@ export function useHighlights(client: BoardClient | null, view: BoardView): Read
   }, []);
 
   useEffect(
-    () => client?.onRejected((r: Rejection) => flash(["cardId" in r.intent.args ? r.intent.args.cardId : r.intent.args.columnId], "rolled-back")),
+    () =>
+      client?.onRejected((r: Rejection) =>
+        flash(["cardId" in r.intent.args ? r.intent.args.cardId : r.intent.args.columnId], "rolled-back"),
+      ),
     [client, flash],
   );
 
+  // Compare each new view with the one before it, inside the client's own change notification
+  // (the recommended way to react to an external store, rather than an effect watching `view`).
   useEffect(() => {
-    const before = previous.current;
-    previous.current = view;
-    const moved: string[] = [];
-    for (const [id, card] of Object.entries(view.board.cards)) {
-      const old = before.board.cards[id];
-      if (!old || view.pending.has(id) || before.pending.has(id)) continue; // not someone else's change
-      if (old.columnId !== card.columnId || old.order !== card.order) moved.push(id);
-    }
-    flash(moved, "remote");
-  }, [view, flash]);
+    if (!client) return;
+    let before = client.getView();
+    return client.subscribe(() => {
+      const view = client.getView();
+      const moved: string[] = [];
+      for (const [id, card] of Object.entries(view.board.cards)) {
+        const old = before.board.cards[id];
+        if (!old || view.pending.has(id) || before.pending.has(id)) continue; // not someone else's change
+        if (old.columnId !== card.columnId || old.order !== card.order) moved.push(id);
+      }
+      before = view;
+      flash(moved, "remote");
+    });
+  }, [client, flash]);
 
   return highlights;
 }

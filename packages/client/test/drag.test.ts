@@ -120,7 +120,10 @@ describe("K5 dropping", () => {
     const b = board();
     const drag = press(b, startCardDrag(b, "d")!, "left", "down"); // into To do, row 2
     const intent = dropCard(b, drag)!;
-    const after = { ...b, cards: { ...b.cards, d: { ...b.cards.d!, columnId: intent.columnId, order: intent.order } } };
+    const after = {
+      ...b,
+      cards: { ...b.cards, d: { ...b.cards.d!, columnId: intent.columnId, order: intent.order } },
+    };
     expect(sortedCardIds(after, "todo")).toEqual(sortedCardIds(previewBoard(b, drag), "todo"));
     expect(sortedCardIds(after, "todo")).toEqual(["a", "d", "b", "c"]);
   });
@@ -130,7 +133,9 @@ describe("K6 cancelling", () => {
   it("says where the card went back to", () => {
     const b = board();
     const drag = press(b, startCardDrag(b, "b")!, "right");
-    expect(announce.cancelled(b, drag, names)).toBe("Cancelled. Card B returned to position 2 of 3 in To do.");
+    expect(announce.cancelled(b, drag, names)).toBe(
+      "Cancelled. Card B returned to position 2 of 3 in To do.",
+    );
   });
 });
 

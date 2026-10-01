@@ -168,7 +168,9 @@ describe("R1 viewers can't edit text", () => {
     ws.send(JSON.stringify({ t: "update", doc: "structure", update: "AAA=" })); // structure is server-only
     ws.send(JSON.stringify({ t: "update", doc: "content", update: "/////w==" })); // corrupt Yjs bytes
     ws.send(JSON.stringify({ t: "awareness", update: "/////w==" })); // corrupt awareness bytes
-    await eventually(() => expect(errors).toEqual(["BAD_MESSAGE", "BAD_MESSAGE", "BAD_MESSAGE", "BAD_MESSAGE"]));
+    await eventually(() =>
+      expect(errors).toEqual(["BAD_MESSAGE", "BAD_MESSAGE", "BAD_MESSAGE", "BAD_MESSAGE"]),
+    );
     ws.close();
 
     const alice = await connect(server); // server still healthy

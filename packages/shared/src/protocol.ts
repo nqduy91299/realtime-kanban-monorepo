@@ -27,7 +27,12 @@ export const clientMessageSchema = z.discriminatedUnion("t", [
   z.object({ t: z.literal("sync2"), doc: z.literal("content"), update: base64 }),
   z.object({ t: z.literal("update"), doc: z.literal("content"), update: base64 }),
   // Structure changes travel as intents (D4). `name`/`args` are validated by runIntent (R7).
-  z.object({ t: z.literal("intent"), id: z.string().regex(/^[\w-]{1,64}$/), name: z.string(), args: z.unknown() }),
+  z.object({
+    t: z.literal("intent"),
+    id: z.string().regex(/^[\w-]{1,64}$/),
+    name: z.string(),
+    args: z.unknown(),
+  }),
   // Presence (D6): a y-protocols awareness update, relayed to everyone else on the board.
   z.object({ t: z.literal("awareness"), update: base64 }),
   // Dev panel only (O8); the server ignores it unless started in dev mode.

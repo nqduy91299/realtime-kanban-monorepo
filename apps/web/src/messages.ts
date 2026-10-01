@@ -39,7 +39,10 @@ const VERB: Record<IntentBody["name"], string> = {
 
 /** The card or column title an intent is about. */
 export function subjectOf(client: BoardClient, intent: IntentBody): string {
-  const key = "cardId" in intent.args ? textKey.cardTitle(intent.args.cardId) : textKey.columnTitle(intent.args.columnId);
+  const key =
+    "cardId" in intent.args
+      ? textKey.cardTitle(intent.args.cardId)
+      : textKey.columnTitle(intent.args.columnId);
   return getText(client.content, key).toString().trim() || "Untitled";
 }
 
@@ -64,10 +67,15 @@ export function describeUndoFailure(
 export function describeFailure(client: BoardClient, intent: IntentBody, code: RejectCode): string {
   const title = (key: string) => getText(client.content, key).toString().trim() || "Untitled";
   const subject =
-    "cardId" in intent.args ? title(textKey.cardTitle(intent.args.cardId)) : title(textKey.columnTitle(intent.args.columnId));
+    "cardId" in intent.args
+      ? title(textKey.cardTitle(intent.args.cardId))
+      : title(textKey.columnTitle(intent.args.columnId));
   const targetColumn = "columnId" in intent.args ? intent.args.columnId : undefined;
   const column = targetColumn ? client.getView().board.columns[targetColumn] : undefined;
-  const why = reason(code, targetColumn ? title(textKey.columnTitle(targetColumn)) : undefined, column?.wipLimit);
+  const why = reason(
+    code,
+    targetColumn ? title(textKey.columnTitle(targetColumn)) : undefined,
+    column?.wipLimit,
+  );
   return `Couldn't ${VERB[intent.name]} “${subject}”: ${why}.`;
 }
-

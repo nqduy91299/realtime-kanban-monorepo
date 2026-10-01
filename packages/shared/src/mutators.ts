@@ -142,7 +142,7 @@ export function runIntent(state: BoardState, raw: unknown, ctx: MutationContext)
   const parsed = parseIntent(raw);
   if (!parsed.ok) return reject("INVALID", parsed.message);
   const { name, args } = parsed.intent;
-  return (mutators[name] as Mutator<typeof name>)(state, args as never);
+  return mutators[name](state, args as never);
 }
 
 /** Apply accepted changes. Returns a new state; the input is left untouched. */

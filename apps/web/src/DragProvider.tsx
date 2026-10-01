@@ -44,8 +44,8 @@ import { useMutate } from "./useMutate.js";
 interface DragApi {
   drag: Drag | null;
   /** Keyboard handling for a card's or column's drag handle (K1–K8). */
-  onHandleKey(event: KeyboardEvent, item: { kind: "card" | "column"; id: string }): void;
-  onHandleBlur(): void;
+  onHandleKey: (event: KeyboardEvent, item: { kind: "card" | "column"; id: string }) => void;
+  onHandleBlur: () => void;
 }
 
 const DragContext = createContext<DragApi>({ drag: null, onHandleKey: () => {}, onHandleBlur: () => {} });
@@ -85,16 +85,28 @@ export function DragProvider({
 }) {
   const board = view.board;
   const mutate = useMutate(client);
-  const [drag, setDrag] = useState<Drag | null>(null);
+  const [drag, setDragState] = useState<Drag | null>(null);
+  /** The pointer-dragged card shown in the floating overlay (state, because the render depends on it). */
+  const [overlayCard, setOverlayCard] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const current = useRef<Drag | null>(null);
   const via = useRef<"keyboard" | "pointer">("keyboard");
   const refocusing = useRef(false);
   const lastDropped = useRef<string | null>(null);
-  current.current = drag;
+
+  /**
+   * Event handlers need the latest drag synchronously (two key presses can arrive before React
+   * re-renders), so it's mirrored in a ref, updated together with the state. Never during render:
+   * React may run a render and throw it away.
+   */
+  const setDrag = useCallback((next: Drag | null) => {
+    current.current = next;
+    setDragState(next);
+  }, []);
 
   const names = useMemo<Names>(() => {
-    const read = (key: string, fallback: string) => getText(client.content, key).toString().trim() || fallback;
+    const read = (key: string, fallback: string) =>
+      getText(client.content, key).toString().trim() || fallback;
     return {
       card: (id) => read(textKey.cardTitle(id), "Untitled card"),
       column: (id) => read(textKey.columnTitle(id), "Untitled column"),
@@ -112,16 +124,18 @@ export function DragProvider({
       if (!next) return;
       via.current = how;
       setDrag(next);
+      setOverlayCard(how === "pointer" && next.kind === "card" ? next.cardId : null);
       client.setPresence({ dragging: next.kind === "card" ? next.cardId : next.columnId }); // P4
       if (how === "keyboard") say(announce.pickedUp(board, next, names));
     },
-    [board, client, names, say],
+    [board, client, names, say, setDrag],
   );
 
   const end = useCallback(() => {
     setDrag(null);
+    setOverlayCard(null);
     client.setPresence({ dragging: null });
-  }, [client]);
+  }, [client, setDrag]);
 
   const move = useCallback(
     (direction: Direction) => {
@@ -132,7 +146,7 @@ export function DragProvider({
       setDrag(after);
       say(announce.moved(board, before, after, names));
     },
-    [board, names, say],
+    [board, names, say, setDrag],
   );
 
   const cancel = useCallback(
@@ -183,8 +197,14 @@ export function DragProvider({
   useEffect(() => {
     const d = current.current;
     if (!d) return;
-    const gone = d.kind === "card" ? !slotOf(board, d.cardId) : !board.columns[d.columnId] || board.columns[d.columnId]!.deleted;
-    if (gone) cancel(`${d.kind === "card" ? names.card(d.cardId) : names.column(d.columnId)} was deleted by someone else.`);
+    const gone =
+      d.kind === "card"
+        ? !slotOf(board, d.cardId)
+        : !board.columns[d.columnId] || board.columns[d.columnId]!.deleted;
+    if (gone)
+      cancel(
+        `${d.kind === "card" ? names.card(d.cardId) : names.column(d.columnId)} was deleted by someone else.`,
+      );
   }, [board, cancel, names]);
 
   // K10: a dropped move the server rejected snaps back; keep focus with it.
@@ -238,7 +258,10 @@ export function DragProvider({
       if (d) return; // another drag is in progress
       if (event.key === " " || event.key === "Enter") {
         event.preventDefault();
-        begin(item.kind === "card" ? startCardDrag(board, item.id) : startColumnDrag(board, item.id), "keyboard");
+        begin(
+          item.kind === "card" ? startCardDrag(board, item.id) : startColumnDrag(board, item.id),
+          "keyboard",
+        );
       } else if (direction && item.kind === "card") {
         event.preventDefault();
         focusNeighbour(item.id, direction);
@@ -276,19 +299,25 @@ export function DragProvider({
     } else if (overId.startsWith("drop-col:")) {
       const columnId = overId.slice("drop-col:".length);
       if (d.target.columnId === columnId) return; // already somewhere in this column
-      setDrag(retarget(d, { columnId, index: sortedCardIds(board, columnId).filter((id) => id !== d.cardId).length }));
+      setDrag(
+        retarget(d, {
+          columnId,
+          index: sortedCardIds(board, columnId).filter((id) => id !== d.cardId).length,
+        }),
+      );
     }
   };
 
   const preview = previewBoard(board, drag);
-  const overlayCard = drag?.kind === "card" && via.current === "pointer" ? drag.cardId : null;
 
   return (
     <DragContext.Provider value={{ drag, onHandleKey, onHandleBlur }}>
       <DndContext
         sensors={sensors}
         collisionDetection={collision}
-        onDragStart={({ active }) => begin(startCardDrag(board, String(active.id).slice("card:".length)), "pointer")}
+        onDragStart={({ active }) =>
+          begin(startCardDrag(board, String(active.id).slice("card:".length)), "pointer")
+        }
         onDragOver={onDragOver}
         onDragEnd={() => drop()}
         onDragCancel={() => cancel()}
@@ -300,8 +329,8 @@ export function DragProvider({
         </DragOverlay>
       </DndContext>
       <p id="drag-help" className="visually-hidden">
-        Press Space to pick up. Use the arrow keys to move, Space to drop, and Escape to cancel. Without picking up, arrow
-        keys move between cards.
+        Press Space to pick up. Use the arrow keys to move, Space to drop, and Escape to cancel. Without
+        picking up, arrow keys move between cards.
       </p>
       <div id="drag-announcer" className="visually-hidden" aria-live="assertive" aria-atomic="true">
         {message}

@@ -82,7 +82,9 @@ export function moveDrag<D extends Drag>(board: BoardState, drag: D, direction: 
 
 /** Set the target directly (pointer dragging). */
 export function retarget(drag: CardDrag, target: Slot): CardDrag {
-  return target.columnId === drag.target.columnId && target.index === drag.target.index ? drag : { ...drag, target };
+  return target.columnId === drag.target.columnId && target.index === drag.target.index
+    ? drag
+    : { ...drag, target };
 }
 
 /** The board as it would look if dropped now. Local only, never sent. */
@@ -175,7 +177,8 @@ export const announce = {
   },
 
   cancelled(board: BoardState, drag: Drag, names: Names): string {
-    if (drag.kind === "column") return `Cancelled. Column ${names.column(drag.columnId)} returned to position ${drag.origin + 1}.`;
+    if (drag.kind === "column")
+      return `Cancelled. Column ${names.column(drag.columnId)} returned to position ${drag.origin + 1}.`;
     const home: CardDrag = { ...drag, target: drag.origin };
     return `Cancelled. ${names.card(drag.cardId)} returned to ${where(board, home, names)}.`;
   },

@@ -36,7 +36,13 @@ export async function connect(
   role: Role = "editor",
   options: Partial<BoardClientOptions> = {},
 ): Promise<BoardClient> {
-  const client = new BoardClient({ url: `ws://localhost:${server.port}`, boardId, role, reconnect: false, ...options });
+  const client = new BoardClient({
+    url: `ws://localhost:${server.port}`,
+    boardId,
+    role,
+    reconnect: false,
+    ...options,
+  });
   cleanups.push(() => client.destroy());
   client.connect();
   await client.whenSynced();

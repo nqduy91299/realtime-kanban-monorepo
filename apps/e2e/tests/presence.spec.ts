@@ -22,7 +22,9 @@ test("P2: a cursor lands on the same card in a narrower window", async ({ browse
   const bobCard = (await card(bob.page, "Target").boundingBox())!;
   expect(Math.round(aliceCard.x)).not.toBe(Math.round(bobCard.x)); // the layouts really differ
 
-  await alice.page.mouse.move(aliceCard.x + aliceCard.width * 0.75, aliceCard.y + aliceCard.height * 0.5, { steps: 4 });
+  await alice.page.mouse.move(aliceCard.x + aliceCard.width * 0.75, aliceCard.y + aliceCard.height * 0.5, {
+    steps: 4,
+  });
   const cursor = bob.page.locator(".cursor").filter({ hasText: "Alice" });
   await expect(cursor).toBeVisible();
   await expect
@@ -65,6 +67,8 @@ test("K12 (dark mode): no accessibility violations with the dark palette", async
   await openAs(browser, "Bob", board);
   await addCard(alice.page, "To do", "Dark card");
   await expect(alice.page.locator('.avatars li[title="Bob"]')).toBeVisible();
-  const result = await new AxeBuilder({ page: alice.page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
+  const result = await new AxeBuilder({ page: alice.page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+    .analyze();
   expect(result.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target).join(", ")}`)).toEqual([]);
 });

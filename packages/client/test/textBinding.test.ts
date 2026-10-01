@@ -78,7 +78,11 @@ describe("changeEnd", () => {
   it.each([
     ["after an insert", [{ retain: 3 }, { insert: "abc" }], 6],
     ["at a deletion", [{ retain: 4 }, { delete: 2 }], 4],
-    ["after the last of several changes", [{ insert: "x" }, { retain: 5 }, { delete: 1 }, { insert: "yz" }], 8],
+    [
+      "after the last of several changes",
+      [{ insert: "x" }, { retain: 5 }, { delete: 1 }, { insert: "yz" }],
+      8,
+    ],
   ] as [string, Delta, number][])("%s", (_label, delta, expected) => {
     expect(changeEnd(delta)).toBe(expected);
   });
