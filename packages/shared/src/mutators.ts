@@ -1,3 +1,6 @@
+// TODO lesson 1: the stubs below don't use their parameters yet. Delete this line when you're done,
+// then `pnpm lint` must pass too.
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { parseIntent, type IntentArgs, type IntentName } from "./intents.js";
 import type {
   BoardState,

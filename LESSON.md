@@ -4,12 +4,12 @@
 
 ## Vì sao bài này quan trọng
 
-Trong app cộng tác, câu hỏi *"thay đổi này có hợp lệ không?"* được hỏi ở **hai nơi**:
+Trong app cộng tác, câu hỏi _"thay đổi này có hợp lệ không?"_ được hỏi ở **hai nơi**:
 
 - **Trình duyệt** hỏi để hiện kết quả ngay lập tức (optimistic update).
 - **Server** hỏi để quyết định thật.
 
-Nếu hai nơi dùng hai đoạn code khác nhau, sớm muộn chúng sẽ lệch nhau: người dùng thấy card nhảy về chỗ cũ mà không hiểu vì sao. Vì vậy cả hai dùng **chung một bộ hàm**, nằm trong `packages/shared/src/mutators.ts`. Mỗi hàm là một *pure function*: nhận vào trạng thái board và tham số, trả ra `{ ok: true, changes }` hoặc `{ ok: false, code }`. Hàm không sửa gì, không gọi mạng.
+Nếu hai nơi dùng hai đoạn code khác nhau, sớm muộn chúng sẽ lệch nhau: người dùng thấy card nhảy về chỗ cũ mà không hiểu vì sao. Vì vậy cả hai dùng **chung một bộ hàm**, nằm trong `packages/shared/src/mutators.ts`. Mỗi hàm là một _pure function_: nhận vào trạng thái board và tham số, trả ra `{ ok: true, changes }` hoặc `{ ok: false, code }`. Hàm không sửa gì, không gọi mạng.
 
 ## Đọc trước (theo thứ tự)
 
@@ -25,12 +25,12 @@ Nếu hai nơi dùng hai đoạn code khác nhau, sớm muộn chúng sẽ lệc
 
 Viết thân 4 hàm đang `throw new Error("TODO lesson 1: …")`:
 
-| Hàm | Luật cần đảm bảo |
-|---|---|
-| `checkTarget` | R2 (cột phải còn sống), R3 (giới hạn WIP), R7 (cột không tồn tại) |
-| `moveCard` | R2, R3, R6, R7, R9 |
-| `deleteColumn` | R4, R7, R9 |
-| `setWipLimit` | R5, R7, R9, và "cột đã xoá thì không đổi được" |
+| Hàm            | Luật cần đảm bảo                                                  |
+| -------------- | ----------------------------------------------------------------- |
+| `checkTarget`  | R2 (cột phải còn sống), R3 (giới hạn WIP), R7 (cột không tồn tại) |
+| `moveCard`     | R2, R3, R6, R7, R9                                                |
+| `deleteColumn` | R4, R7, R9                                                        |
+| `setWipLimit`  | R5, R7, R9, và "cột đã xoá thì không đổi được"                    |
 
 ## Chạy
 
@@ -47,12 +47,12 @@ Bắt đầu: **38 test đỏ, 25 xanh**. Xong khi: **63/63 xanh**.
 
 <details><summary>Gợi ý 1: test đòi một mã lỗi cụ thể khi nhiều luật cùng sai</summary>
 
-Thứ tự kiểm tra quyết định mã lỗi trả về. Xem `deleteCard` có sẵn: nó kiểm tra *tồn tại → expect (STALE) → trạng thái*. Hãy tự hỏi: nếu card đã bị xoá **và** `expect` không khớp, người gọi (chức năng undo ở bài 9) nên nhận `STALE` hay `CARD_DELETED`?
+Thứ tự kiểm tra quyết định mã lỗi trả về. Xem `deleteCard` có sẵn: nó kiểm tra _tồn tại → expect (STALE) → trạng thái_. Hãy tự hỏi: nếu card đã bị xoá **và** `expect` không khớp, người gọi (chức năng undo ở bài 9) nên nhận `STALE` hay `CARD_DELETED`?
 </details>
 
 <details><summary>Gợi ý 2: test "reordering inside a full column is allowed" vẫn đỏ</summary>
 
-Cột "Doing" giới hạn 1 và đang có đúng card đó. Card đổi vị trí *trong cùng cột* thì có làm cột vượt giới hạn không? Xem tham số thứ ba của `liveCardCount`.
+Cột "Doing" giới hạn 1 và đang có đúng card đó. Card đổi vị trí _trong cùng cột_ thì có làm cột vượt giới hạn không? Xem tham số thứ ba của `liveCardCount`.
 </details>
 
 <details><summary>Gợi ý 3: deleteColumn trên cột đã xoá</summary>
@@ -78,6 +78,13 @@ Trả lời 3 câu dưới đây khi nhắn cho mình:
 3. Vì sao `checkTarget` nhận `cardId`? Nêu một tình huống sẽ sai nếu bỏ tham số đó.
 
 ## Xong rồi thì
+
+Đầu file `mutators.ts` có một dòng `eslint-disable`, vì các hàm còn là khung thì chưa dùng tham số. Khi test đã xanh, **xoá dòng đó** và chạy:
+
+```bash
+pnpm lint                  # ESLint phải sạch
+pnpm format                # Prettier format lại code của bạn
+```
 
 ```bash
 git add -A && git commit -m "Lesson 1: implement the board rules"
