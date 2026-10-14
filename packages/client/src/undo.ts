@@ -1,3 +1,5 @@
+// TODO lesson 9: the stubs below don't use their parameters yet. Delete these two lines when you're done.
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import type { BoardState, IntentBody, RejectCode } from "@kanban/shared";
 import type { BoardClient } from "./BoardClient.js";
 
@@ -14,76 +16,10 @@ export function invertIntent(
   before: BoardState,
   intent: IntentBody,
 ): { undo: IntentBody; redo: IntentBody } | null {
-  switch (intent.name) {
-    case "moveCard": {
-      const { cardId, columnId, order } = intent.args;
-      const prev = before.cards[cardId];
-      if (!prev || (prev.columnId === columnId && prev.order === order)) return null;
-      return {
-        undo: {
-          name: "moveCard",
-          args: { cardId, columnId: prev.columnId, order: prev.order, expect: { columnId, order } },
-        },
-        redo: {
-          name: "moveCard",
-          args: { cardId, columnId, order, expect: { columnId: prev.columnId, order: prev.order } },
-        },
-      };
-    }
-    case "createCard":
-    case "restoreCard": {
-      const { cardId } = intent.args;
-      if (intent.name === "restoreCard" && !before.cards[cardId]?.deleted) return null;
-      return {
-        undo: { name: "deleteCard", args: { cardId, expect: { deleted: false } } },
-        // A card is never created twice: redo brings the soft-deleted one back.
-        redo: { name: "restoreCard", args: { cardId, expect: { deleted: true } } },
-      };
-    }
-    case "deleteCard": {
-      const { cardId } = intent.args;
-      if (!before.cards[cardId] || before.cards[cardId].deleted) return null;
-      return {
-        undo: { name: "restoreCard", args: { cardId, expect: { deleted: true } } },
-        redo: { name: "deleteCard", args: { cardId, expect: { deleted: false } } },
-      };
-    }
-    case "createColumn":
-    case "restoreColumn": {
-      const { columnId } = intent.args;
-      if (intent.name === "restoreColumn" && !before.columns[columnId]?.deleted) return null;
-      return {
-        undo: { name: "deleteColumn", args: { columnId, expect: { deleted: false } } },
-        redo: { name: "restoreColumn", args: { columnId, expect: { deleted: true } } },
-      };
-    }
-    case "deleteColumn": {
-      const { columnId } = intent.args;
-      if (!before.columns[columnId] || before.columns[columnId].deleted) return null;
-      return {
-        undo: { name: "restoreColumn", args: { columnId, expect: { deleted: true } } },
-        redo: { name: "deleteColumn", args: { columnId, expect: { deleted: false } } },
-      };
-    }
-    case "moveColumn": {
-      const { columnId, order } = intent.args;
-      const prev = before.columns[columnId];
-      if (!prev || prev.order === order) return null;
-      return {
-        undo: { name: "moveColumn", args: { columnId, order: prev.order, expect: { order } } },
-        redo: { name: "moveColumn", args: { columnId, order, expect: { order: prev.order } } },
-      };
-    }
-    case "setWipLimit": {
-      const { columnId, wipLimit } = intent.args;
-      const prev = before.columns[columnId];
-      if (!prev || prev.wipLimit === wipLimit) return null;
-      return {
-        undo: { name: "setWipLimit", args: { columnId, wipLimit: prev.wipLimit, expect: { wipLimit } } },
-        redo: { name: "setWipLimit", args: { columnId, wipLimit, expect: { wipLimit: prev.wipLimit } } },
-      };
-    }
-  }
+  // TODO lesson 9: one case per intent name (switch on intent.name). Read the comment above first:
+  // every undo and redo carries `expect`. This placeholder means "nothing to undo", so the app
+  // runs, but the undo button never lights up.
+  return null;
 }
 
 export interface UndoEntry {
@@ -161,18 +97,13 @@ export class BoardUndo {
   }
 
   private step(from: UndoEntry[], to: UndoEntry[], direction: "undo" | "redo"): UndoResult {
-    const entry = from.pop();
-    if (!entry) return { ok: false, entry: null };
-    const intent = entry[direction];
-    const result = this.client.mutate(intent.name, intent.args, direction);
-    if (!result.ok) {
-      // Refused locally (e.g. STALE: someone changed it since). The entry can't apply any more: drop it.
-      this.notify();
-      return { ok: false, entry, code: result.code };
-    }
-    to.push({ ...entry, intentId: result.id });
-    this.notify();
-    return { ok: true, entry };
+    // TODO lesson 9 (U3, U4): take the latest entry from `from`, send its `direction` intent with
+    // this.client.mutate(name, args, direction), and:
+    //  - refused locally (e.g. STALE)? Drop the entry: it can never apply again.
+    //  - accepted? Move it to `to`, remembering the *new* intent id (if the server rejects it later,
+    //    the onRejected handler in the constructor drops it by that id).
+    // Notify listeners either way, so the buttons update.
+    return { ok: false, entry: null };
   }
 
   private notify(): void {
