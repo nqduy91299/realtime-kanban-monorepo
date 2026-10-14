@@ -1,3 +1,5 @@
+// TODO lesson 3: some stubs below don't use their parameters yet. Delete this line when you're done.
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import * as Y from "yjs";
 import { Awareness, encodeAwarenessUpdate, removeAwarenessStates } from "y-protocols/awareness";
 import { seedBoard, toBase64, type DocName, type Role, type ServerMessage } from "@kanban/shared";
@@ -52,11 +54,10 @@ export class Room {
    */
   private relay(name: DocName, doc: Y.Doc): void {
     doc.on("update", (update: Uint8Array, origin: unknown) => {
-      this.store.append(this.id, name, update);
-      const message: ServerMessage = { t: "update", doc: name, update: toBase64(update) };
-      for (const conn of this.connections) {
-        if (conn !== origin) conn.send(message);
-      }
+      // TODO lesson 3 (S5, S6, C1):
+      //  1. persist the update (this.store has a method for it), so a restarted server still has it;
+      //  2. send it to the connections of *this* room, except the one it came from.
+      //     How do you know where it came from? Look at what server.ts passes to Y.applyUpdate.
     });
   }
 

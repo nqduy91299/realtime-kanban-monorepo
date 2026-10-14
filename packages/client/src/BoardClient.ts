@@ -1,3 +1,5 @@
+// TODO lesson 3: some stubs below don't use their parameters yet. Delete this line when you're done.
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import * as Y from "yjs";
 import {
   Awareness,
@@ -521,14 +523,13 @@ export class BoardClient {
         this.role = message.role;
         return;
       case "sync1": {
-        const missing = Y.encodeStateAsUpdate(this.content, fromBase64(message.sv));
-        if (this.role === "editor") this.send({ t: "sync2", doc: "content", update: toBase64(missing) });
+        // TODO lesson 3 (F4): the *server* asks what it's missing from our content doc,
+        // e.g. edits made while we were offline. Reply with sync2. (Should a viewer reply? R1)
         return;
       }
       case "sync2":
-        Y.applyUpdate(this.docFor(message.doc), fromBase64(message.update), REMOTE);
-        this.pendingSync.delete(message.doc);
-        if (this.pendingSync.size === 0) this.setStatus("online");
+        // TODO lesson 3: apply what we were missing (with which origin? see the "update" case below),
+        // then this doc is in sync. When *both* docs are (see pendingSync in open()), we're "online".
         return;
       case "update":
         Y.applyUpdate(this.docFor(message.doc), fromBase64(message.update), REMOTE);
@@ -554,11 +555,9 @@ export class BoardClient {
   }
 
   private onLocalContentUpdate = (update: Uint8Array, origin: unknown): void => {
-    if (origin === REMOTE || origin === STORAGE) return;
-    // Viewers can't edit (R1); the UI disables inputs, and the server would drop it anyway.
-    if (this.role !== "editor") return;
-    // While offline this is a no-op; the edit stays in `content` and goes out via sync on reconnect.
-    this.send({ t: "update", doc: "content", update: toBase64(update) });
+    // TODO lesson 3: every change to the content doc lands here, *including* ones we just received
+    // from the server and ones loaded from this device's storage. Send only our own edits.
+    // And viewers? (R1)
   };
 
   private docFor(name: "content" | "structure"): Y.Doc {

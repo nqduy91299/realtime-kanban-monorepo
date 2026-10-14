@@ -118,9 +118,8 @@ export async function createServer({ port = 0, dbPath, dev = false }: ServerOpti
   function handle(room: Room, conn: Connection, message: ClientMessage) {
     switch (message.t) {
       case "sync1": {
-        const doc = room.doc(message.doc);
-        const missing = Y.encodeStateAsUpdate(doc, fromBase64(message.sv));
-        conn.send({ t: "sync2", doc: message.doc, update: toBase64(missing) });
+        // TODO lesson 3: the client says "here's what I have" (a state vector).
+        // Reply with sync2: exactly the updates it's missing, for the doc it asked about.
         return;
       }
       case "sync2":
