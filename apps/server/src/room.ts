@@ -1,3 +1,5 @@
+// TODO lesson 6: some stubs below don't use their parameters yet. Delete these two lines when you're done.
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import * as Y from "yjs";
 import { Awareness, encodeAwarenessUpdate, removeAwarenessStates } from "y-protocols/awareness";
 import { seedBoard, toBase64, type DocName, type Role, type ServerMessage } from "@kanban/shared";
@@ -65,19 +67,11 @@ export class Room {
     { added, updated, removed }: { added: number[]; updated: number[]; removed: number[] },
     origin: unknown,
   ): void => {
-    const changed = [...added, ...updated, ...removed];
-    const from = this.connections.has(origin as Connection) ? (origin as Connection) : null;
-    if (from) {
-      for (const id of [...added, ...updated]) from.awarenessIds.add(id);
-      for (const id of removed) from.awarenessIds.delete(id);
-    }
-    const message: ServerMessage = {
-      t: "awareness",
-      update: toBase64(encodeAwarenessUpdate(this.awareness, changed)),
-    };
-    for (const conn of this.connections) {
-      if (conn !== from) conn.send(message);
-    }
+    // TODO lesson 6 (P1, P5): presence changed (from a client, or from the server's own timeout).
+    //  1. If it came from one of this room's connections (server.ts passes the connection as
+    //     origin), remember which awareness client ids belong to it: conn.awarenessIds.
+    //     forgetPresence() will need that list when the connection closes.
+    //  2. Send the changed states (encodeAwarenessUpdate) to everyone except that connection.
   };
 
   /** Everyone currently present, for a client that just joined. */
@@ -89,7 +83,8 @@ export class Room {
 
   /** A closed tab disappears for everyone right away, not after the 30 s timeout (P5). */
   forgetPresence(conn: Connection): void {
-    removeAwarenessStates(this.awareness, [...conn.awarenessIds], null);
+    // TODO lesson 6 (P5): remove this connection's presence states. removeAwarenessStates triggers
+    // the "update" event, so relayAwareness tells everyone else.
   }
 
   doc(name: DocName): Y.Doc {

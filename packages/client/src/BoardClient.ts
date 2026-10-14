@@ -1,3 +1,5 @@
+// TODO lesson 6: some stubs below don't use their parameters yet. Delete these two lines when you're done.
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import * as Y from "yjs";
 import {
   Awareness,
@@ -376,13 +378,9 @@ export class BoardClient {
   }): void => {
     // Our own cursor moving shouldn't produce a new peers array (and a React re-render).
     if ([...added, ...updated, ...removed].every((id) => id === this.awareness.clientID)) return;
-    const peers: Peer[] = [];
-    for (const [clientId, state] of this.awareness.getStates()) {
-      if (clientId === this.awareness.clientID) continue;
-      const presence = parsePresence(state);
-      if (presence) peers.push({ clientId, ...presence });
-    }
-    this.peers = peers.sort((a, b) => a.clientId - b.clientId);
+    // TODO lesson 6 (P1, P7): rebuild this.peers from this.awareness.getStates(): everyone except us,
+    // one entry per awareness client (= per tab). Other people's states are untrusted input:
+    // validate them with parsePresence. Keep a stable order, so the avatars don't shuffle.
   };
 
   private onLocalAwarenessUpdate = (
@@ -403,9 +401,8 @@ export class BoardClient {
    * sends on reconnect would be ignored until each peer's next renewal (up to 15 s).
    */
   private forgetPeers(): void {
-    const others = [...this.awareness.getStates().keys()].filter((id) => id !== this.awareness.clientID);
-    removeAwarenessStates(this.awareness, others, REMOTE);
-    for (const id of others) this.awareness.meta.delete(id);
+    // TODO lesson 6 (P8): remove everyone else's state (origin REMOTE, so we don't send anything).
+    // Then read the comment above: there's a second step, or reconnecting breaks. Test P8 shows it.
   }
 
   /**
@@ -413,8 +410,7 @@ export class BoardClient {
    * when the old connection closed, and it would ignore a state with the same clock it already has.
    */
   private reannouncePresence(): void {
-    const presence = this.awareness.getLocalState();
-    if (presence) this.awareness.setLocalState(presence);
+    // TODO lesson 6 (P8): send our current state again, with a newer clock (if we have one).
   }
 
   /* ---------- dev panel (O8) ---------- */
