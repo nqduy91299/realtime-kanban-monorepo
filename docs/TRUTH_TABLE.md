@@ -22,7 +22,7 @@ This split is also the honest interview answer: _"CRDT where a merge is meaningf
 
 ### D2. Two Yjs docs per board
 
-- `content` doc: `Y.Map<key, Y.Text>`, with keys `card:{id}:title`, `card:{id}:desc`, `column:{id}:title`. Clients and the server exchange Yjs updates freely.
+- `content` doc: one **top-level** `Y.Text` per field, `doc.getText(key)`, with keys `card:{id}:title`, `card:{id}:desc`, `column:{id}:title`. Clients and the server exchange Yjs updates freely. (Not a `Y.Map` of `Y.Text`: two clients creating the same text in a map at the same moment would lose one person's typing. A top-level type is identified by its name, so there's nothing to race on.)
 - `structure` doc: **only the server writes to it.** Clients receive it as the _confirmed_ state.
   - `columns: Y.Map<columnId, {order, wipLimit, deleted}>`
   - `cards: Y.Map<cardId, {columnId, order, deleted}>`
@@ -38,7 +38,7 @@ The client never changes its confirmed state speculatively. It renders `view = a
 
 ### D4. Shared mutators
 
-Each intent (`createCard`, `moveCard`, `deleteCard`, `restoreCard`, `createColumn`, `moveColumn`, `deleteColumn`, `setWipLimit`) is **one pure function** in a shared package: `(state, args) => {ok, patch} | {error: code}`. The client runs it to predict the result. The server runs the same function to decide. Because both sides use the same code, prediction and decision can't drift apart.
+Each intent (`createCard`, `moveCard`, `deleteCard`, `restoreCard`, `createColumn`, `moveColumn`, `deleteColumn`, `restoreColumn`, `setWipLimit`) is **one pure function** in a shared package: `(state, args) => {ok: true, changes} | {ok: false, code}`. The client runs it to predict the result. The server runs the same function to decide. Because both sides use the same code, prediction and decision can't drift apart.
 
 ### D5. Ordering uses fractional indexing
 
@@ -175,16 +175,20 @@ The server rejects an intent with a code when a rule fails. The client shows a h
 
 ---
 
-## 10. Wire protocol (sketch)
+## 10. Wire protocol
+
+JSON text frames; Yjs payloads are base64. Source of truth: `packages/shared/src/protocol.ts`.
 
 ```
-client → server   {t:"sync1", doc, stateVector}           // Yjs sync step 1
-server → client   {t:"sync2", doc, update}                // Yjs sync step 2
-both ways         {t:"content", update}                   // content doc updates
-server → client   {t:"structure", update}                 // confirmed structure updates
-client → server   {t:"intent", id, name, args, expect?}
-server → client   {t:"ack", id} | {t:"nack", id, code}    // ack is always sent AFTER its structure update
+server → client   {t:"welcome", role}
+both ways         {t:"sync1", doc, sv}                    // Yjs sync step 1: "here's what I have"
+both ways         {t:"sync2", doc, update}                // Yjs sync step 2: "here's what you lack"
+both ways         {t:"update", doc, update}               // doc = "content" both ways; "structure" only server → client
+client → server   {t:"intent", id, name, args}            // args may carry `expect` (R9)
+server → client   {t:"ack", id} | {t:"nack", id, code}    // ack is always sent AFTER its structure update (O3)
 both ways         {t:"awareness", update}                 // presence
+server → client   {t:"error", code}                       // FORBIDDEN | BAD_MESSAGE
+client → server   {t:"dev", action}                       // dev panel only: rejectNext | dropNextReply
 ```
 
 ## 11. Milestones (each one closes a set of rows)
@@ -213,6 +217,7 @@ Auth beyond a name prompt plus a role picker · multiple boards UI (one board pe
 
 ## 14. Change log
 
+- 2026-10-14: D2, D4 and §10 brought in line with the code (top-level `Y.Text`, the `restoreColumn` intent, the real wire protocol). Lesson branches `learn/01`–`learn/09` added (see `LESSON.md` on each).
 - 2026-09-29: decisions approved; R8 moved from M0 to M2.
 - 2026-09-30: M7 done. `README.md` explains CRDT vs LWW and has the conflict table. 22 Playwright tests in real Chrome (`apps/e2e`, `pnpm e2e`) cover the rows marked "needs E2E": O1/O2/O4/O8 visuals, P1–P3/P5 in the browser, F1/F2, F3 (production build + service worker, reload with no network), F9, K1–K12 (announcement text, focus, WebSocket frame counting for "one drag = one intent", axe in light and dark), U1/U4/U5/U7. They found two bugs: (1) board undo never recorded anything in the app, because React StrictMode's dev double-mount destroyed a `useMemo`'d history (fixed: create and destroy in one effect); (2) the "Connected" pill and the dev-panel label failed WCAG AA contrast (colors darkened). `pnpm test` = unit + integration (164), `pnpm e2e` = browser (22).
 - 2026-09-30: M6 done. `invertIntent` builds each undo/redo as an intent with `expect` set to the state our change left behind; a property test checks that change → undo → redo gives exactly the before/after boards for every intent type. `BoardUndo` is integration-tested for U2–U4, U6, U8 and U9 (`apps/server/test/undo.test.ts`), including U4 rejected by the server when the other change hadn't arrived yet. Added the `restoreColumn` intent (undo of deleteColumn, redo of createColumn). U4 wording changed: the app can't know _who_ made the conflicting change, so the toast says "someone". U5 is a per-field `Y.UndoManager` that tracks only that field's own typing; its behavior is unit-tested on two replicas. U1, U7 and keyboard handling need E2E (M7). Fixed a timing-flaky R8 test (its 50 ms window was too tight under load).

@@ -408,6 +408,15 @@ export class BoardClient {
     for (const id of others) this.awareness.meta.delete(id);
   }
 
+  /**
+   * After a reconnect: send our presence again with a bumped clock. The server removed our state
+   * when the old connection closed, and it would ignore a state with the same clock it already has.
+   */
+  private reannouncePresence(): void {
+    const presence = this.awareness.getLocalState();
+    if (presence) this.awareness.setLocalState(presence);
+  }
+
   /* ---------- dev panel (O8) ---------- */
 
   setLatency(ms: number): void {
@@ -453,10 +462,7 @@ export class BoardClient {
       // Everything still pending, in its original order (F5). The server processes a
       // connection's messages in order, and already-decided ids are answered, not re-applied (R8).
       for (const intent of this.outbox) this.sendIntent(intent);
-      // Re-announce ourselves with a bumped clock. The server removed our state when the old
-      // connection closed, and it would ignore a state with the same clock it already has.
-      const presence = this.awareness.getLocalState();
-      if (presence) this.awareness.setLocalState(presence);
+      this.reannouncePresence();
     };
     ws.onmessage = (event) => {
       const message = JSON.parse(String(event.data)) as ServerMessage;
