@@ -1,3 +1,5 @@
+// TODO lesson 2: the stubs below don't use their parameters yet. Delete this line when you're done.
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { generateKeyBetween } from "fractional-indexing";
 import type { BoardState } from "./types.js";
 
@@ -11,9 +13,9 @@ export function keyBetween(before: string | null, after: string | null): string 
  * Never use localeCompare here: fractional keys rely on byte order, and the id
  * tie-break is what makes two cards with the same key sort the same way everywhere (C8).
  */
+// TODO lesson 2: a comparator for Array.prototype.sort. Each entry is [id, { order }].
 function byOrderThenId(a: [string, { order: string }], b: [string, { order: string }]): number {
-  if (a[1].order !== b[1].order) return a[1].order < b[1].order ? -1 : 1;
-  return a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0;
+  throw new Error("TODO lesson 2: byOrderThenId");
 }
 
 export function sortedColumnIds(state: BoardState): string[] {
@@ -35,12 +37,9 @@ export function sortedCardIds(state: BoardState, columnId: string): string[] {
  * If the neighbours share a key (a C8 tie), there's no key strictly between them, so we step
  * past the tie. The item then lands just after the tied group: close, and the same everywhere.
  */
+// TODO lesson 2: use keyBetween(before, after). Careful: keyBetween throws if before >= after.
 function orderAt(ids: string[], orderOf: (id: string) => string, index: number): string {
-  const before = index > 0 ? orderOf(ids[index - 1]!) : null;
-  let next = index;
-  while (next < ids.length && before !== null && orderOf(ids[next]!) <= before) next++;
-  const after = next < ids.length ? orderOf(ids[next]!) : null;
-  return keyBetween(before, after);
+  throw new Error("TODO lesson 2: orderAt");
 }
 
 /** Order key for putting `cardId` at position `index` of `columnId` (0 = top). */
