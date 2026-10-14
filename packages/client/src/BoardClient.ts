@@ -1,3 +1,5 @@
+// TODO lesson 7: `saved` is unused until you're done. Delete these two lines then.
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import * as Y from "yjs";
 import {
   Awareness,
@@ -298,13 +300,12 @@ export class BoardClient {
     if (!store) return;
     try {
       const saved = await store.load(boardId);
-      if (this.destroyed) return;
-      if (saved.structure) Y.applyUpdate(this.structure, saved.structure, STORAGE);
-      if (saved.content) Y.applyUpdate(this.content, saved.content, STORAGE);
-      // Saved intents are older than anything mutate()d while loading, so they go first (F5).
-      const fresh = this.outbox.filter((i) => !saved.outbox.some((s) => s.id === i.id));
-      this.outbox = [...saved.outbox, ...fresh];
-      this.recomputeView();
+      // TODO lesson 7 (F3, F5): put what this device saved back into the client:
+      //  - both docs (with which origin, so they're neither sent to the server nor saved again?);
+      //  - the outbox. mutate() may already have added intents while we were loading:
+      //    which ones are older? Could one be in both lists?
+      //  - and then the screen has to show it.
+      // Also: what if the client was destroyed while we were waiting for IndexedDB?
     } catch (error) {
       console.warn("kanban: couldn't load local data", error);
     }

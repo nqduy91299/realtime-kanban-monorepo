@@ -1,3 +1,5 @@
+// TODO lesson 7: the stubs below don't use some variables yet. Delete these two lines when you're done.
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import * as Y from "yjs";
 import type { DocName, Intent } from "@kanban/shared";
 
@@ -105,40 +107,19 @@ export class IndexedDbStore implements LocalStore {
   /** Read every update for one doc, merged. Compacts the log in the same transaction if it's long. */
   private async loadDoc(boardId: string, doc: DocName): Promise<Uint8Array | null> {
     const db = await this.db;
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction("updates", "readwrite");
-      const store = tx.objectStore("updates");
-      const range = IDBKeyRange.only([boardId, doc]);
-      const keysReq = store.index("byDoc").getAllKeys(range);
-      const rowsReq = store.index("byDoc").getAll(range);
-      let merged: Uint8Array | null = null;
-      rowsReq.onsuccess = () => {
-        const rows = rowsReq.result as UpdateRow[];
-        if (rows.length === 0) return;
-        merged = Y.mergeUpdates(rows.map((r) => r.data));
-        if (rows.length > IndexedDbStore.COMPACT_AFTER) {
-          // Only the rows read above are replaced. Rows another tab adds meanwhile get higher keys and stay.
-          for (const key of keysReq.result) store.delete(key);
-          store.add({ board: boardId, doc, data: merged } satisfies UpdateRow);
-        }
-      };
-      tx.oncomplete = () => resolve(merged);
-      tx.onerror = () => reject(idbError(tx.error));
-    });
+    // TODO lesson 7 (F3): read every update row of this (board, doc) from the "updates" store
+    // (the "byDoc" index takes the key [boardId, doc]), and merge them into one update
+    // (Y.mergeUpdates). No rows → null.
+    // Then compaction: if there are more than COMPACT_AFTER rows, replace them with the merged one,
+    // in the same transaction. Careful: another tab may be adding rows at the same time.
+    return null;
   }
 
   private async loadOutbox(boardId: string): Promise<Intent[]> {
     const db = await this.db;
-    return new Promise((resolve, reject) => {
-      // Rows come back in key order, and keys are auto-incremented, so this is creation order (F5).
-      const request = db.transaction("outbox").objectStore("outbox").index("byBoard").getAll(boardId);
-      request.onsuccess = () => {
-        const rows = request.result as IntentRow[];
-        const seen = new Set<string>();
-        resolve(rows.filter((r) => !seen.has(r.id) && seen.add(r.id)).map((r) => r.intent));
-      };
-      request.onerror = () => reject(idbError(request.error));
-    });
+    // TODO lesson 7 (F5): all pending intents of this board from the "outbox" store ("byBoard"
+    // index), oldest first. What decides "oldest first" here? Could the same id appear twice?
+    return [];
   }
 
   private async write(storeName: "updates" | "outbox", fn: (store: IDBObjectStore) => void): Promise<void> {
