@@ -1,3 +1,5 @@
+// TODO lesson 8: the stubs below don't use their parameters yet. Delete these two lines when you're done.
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   applyChanges,
   cardOrderAt,
@@ -61,23 +63,8 @@ function othersIn(board: BoardState, columnId: string, cardId: string): number {
 
 /** One arrow key press. ↑/↓ within the column (K3); ←/→ to the next column, index clamped (K4). */
 export function moveDrag<D extends Drag>(board: BoardState, drag: D, direction: Direction): D {
-  if (drag.kind === "column") {
-    if (direction === "up" || direction === "down") return drag;
-    const last = sortedColumnIds(board).length - 1;
-    const target = Math.max(0, Math.min(last, drag.target + (direction === "left" ? -1 : 1)));
-    return { ...drag, target };
-  }
-  const { columnId, index } = drag.target;
-  if (direction === "up" || direction === "down") {
-    const max = othersIn(board, columnId, drag.cardId);
-    const next = Math.max(0, Math.min(max, index + (direction === "up" ? -1 : 1)));
-    return { ...drag, target: { columnId, index: next } };
-  }
-  const columns = sortedColumnIds(board);
-  const neighbour = columns[columns.indexOf(columnId) + (direction === "left" ? -1 : 1)];
-  if (!neighbour) return drag;
-  const max = othersIn(board, neighbour, drag.cardId);
-  return { ...drag, target: { columnId: neighbour, index: Math.min(index, max) } };
+  // TODO lesson 8: one arrow press. Return a new drag; never mutate the old one
+  throw new Error("TODO lesson 8: moveDrag");
 }
 
 /** Set the target directly (pointer dragging). */
@@ -89,18 +76,8 @@ export function retarget(drag: CardDrag, target: Slot): CardDrag {
 
 /** The board as it would look if dropped now. Local only, never sent. */
 export function previewBoard(board: BoardState, drag: Drag | null): BoardState {
-  if (!drag) return board;
-  if (drag.kind === "column") {
-    const current = board.columns[drag.columnId];
-    if (!current || drag.target === drag.origin) return board;
-    const order = columnOrderAt(board, drag.target, drag.columnId);
-    return applyChanges(board, [{ kind: "column", id: drag.columnId, value: { ...current, order } }]);
-  }
-  const current = board.cards[drag.cardId];
-  if (!current || isHome(drag)) return board;
-  const { columnId, index } = drag.target;
-  const order = cardOrderAt(board, columnId, index, drag.cardId);
-  return applyChanges(board, [{ kind: "card", id: drag.cardId, value: { ...current, columnId, order } }]);
+  // TODO lesson 8: the board as it would look if dropped now (local only)
+  throw new Error("TODO lesson 8: previewBoard");
 }
 
 function isHome(drag: CardDrag): boolean {
@@ -109,14 +86,13 @@ function isHome(drag: CardDrag): boolean {
 
 /** The single intent a drop produces (K5), or null if it ends where it started. */
 export function dropCard(board: BoardState, drag: CardDrag): IntentArgs<"moveCard"> | null {
-  if (isHome(drag)) return null;
-  const { columnId, index } = drag.target;
-  return { cardId: drag.cardId, columnId, order: cardOrderAt(board, columnId, index, drag.cardId) };
+  // TODO lesson 8: the single moveCard intent's args, or null if it ends where it started
+  throw new Error("TODO lesson 8: dropCard");
 }
 
 export function dropColumn(board: BoardState, drag: ColumnDrag): IntentArgs<"moveColumn"> | null {
-  if (drag.target === drag.origin) return null;
-  return { columnId: drag.columnId, order: columnOrderAt(board, drag.target, drag.columnId) };
+  // TODO lesson 8: the same for a column
+  throw new Error("TODO lesson 8: dropColumn");
 }
 
 /* ---------- what a screen reader hears (K2–K6) ---------- */
