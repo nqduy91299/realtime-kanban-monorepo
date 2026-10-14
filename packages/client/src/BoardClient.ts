@@ -1,3 +1,5 @@
+// TODO lesson 5: some stubs below don't use their parameters yet. Delete these two lines when you're done.
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import * as Y from "yjs";
 import {
   Awareness,
@@ -254,14 +256,10 @@ export class BoardClient {
    * simply skipped, so the view already shows what the server is about to say.
    */
   private recomputeView(): void {
-    let board = this.confirmed;
-    const pending = new Set<string>();
-    for (const intent of this.outbox) {
-      pending.add(intentTarget(intent));
-      const result = runIntent(board, intent, { role: this.role });
-      if (result.ok) board = applyChanges(board, result.changes);
-    }
-    this.view = { board, pending };
+    // TODO lesson 5 (D3, O1, O2, O6): this placeholder shows only what the server confirmed, so the
+    // app works but nothing is optimistic. Build the view as confirmed + replay(outbox) instead,
+    // and fill `pending` with the id each pending intent is about (see intentTarget).
+    this.view = { board: this.confirmed, pending: new Set() };
     for (const listener of this.viewListeners) listener();
   }
 
@@ -281,14 +279,11 @@ export class BoardClient {
   private settle(id: string, rejection?: { code: RejectCode; message?: string }): void {
     clearTimeout(this.ackTimers.get(id));
     this.ackTimers.delete(id);
-    const intent = this.outbox.find((i) => i.id === id);
-    if (!intent) return; // a duplicate answer to a resend
-    this.outbox = this.outbox.filter((i) => i !== intent);
-    this.options.store?.removeIntent(this.options.boardId, id);
-    this.recomputeView();
-    if (rejection) {
-      for (const listener of this.rejectionListeners) listener({ intent, ...rejection });
-    }
+    // TODO lesson 5 (O3, O4, O5): the server answered intent `id` (ack, or nack with `rejection`).
+    //  - What if we have no such intent? (Think: we resent it, and both answers arrived. O7, R8)
+    //  - Remove it from the outbox, in memory *and* on disk (this.options.store).
+    //  - Recompute the view. For a nack, that recompute *is* the rollback.
+    //  - For a nack, tell this.rejectionListeners (the UI shows the toast).
   }
 
   /* ---------- this device's storage (F2, F3) ---------- */

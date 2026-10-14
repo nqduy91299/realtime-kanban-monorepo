@@ -1,3 +1,5 @@
+// TODO lesson 5: some imports aren't used until you're done. Delete these two lines then.
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { createServer as createHttpServer } from "node:http";
 import type { AddressInfo } from "node:net";
 import { WebSocketServer, type RawData, type WebSocket } from "ws";
@@ -161,33 +163,22 @@ export async function createServer({ port = 0, dbPath, dev = false }: ServerOpti
     const { id, name, args } = message;
     const store = room.store;
 
-    const previous = store.intentResult(room.id, id);
-    if (previous) {
-      reply(
-        room,
-        conn,
-        id,
-        previous.code === null ? { ok: true, changes: [] } : { ok: false, code: previous.code },
-      );
-      return;
-    }
+    // TODO lesson 5, step 1 (R8): has this id been decided before? Then answer the same way
+    // again (store.intentResult) and stop: never apply it twice.
 
     let result: MutationResult;
     if (room.dev.rejectNext) {
       room.dev.rejectNext = false;
       result = { ok: false, code: "DEV_REJECT" };
     } else {
-      // Reading the whole structure doc per intent is O(board size). Fine at this scale;
-      // a bigger app would keep a cached BoardState next to the doc.
-      result = runIntent(readBoardState(room.structure), { name, args }, { role: conn.role });
+      // TODO lesson 5, step 2: run the *same* mutator the client ran, against the real state
+      // (readBoardState(room.structure)), with this connection's role. Replace this placeholder:
+      result = { ok: false, code: "INVALID", message: "TODO lesson 5: handleIntent" };
     }
 
-    // One SQLite transaction: the update rows and the intent record are committed together.
-    store.transaction(() => {
-      if (result.ok && result.changes.length > 0) writeChanges(room.structure, result.changes, SERVER_ORIGIN);
-      store.recordIntent(room.id, id, result.ok ? null : result.code);
-    });
-    reply(room, conn, id, result);
+    // TODO lesson 5, step 3: if accepted, write the changes to the structure doc (writeChanges, origin
+    // SERVER_ORIGIN), and record the decision (store.recordIntent). Both in ONE store.transaction.
+    // Step 4: reply(). Why must the reply come *after* the structure write? (O3)
   }
 
   function reply(room: Room, conn: Connection, id: string, result: MutationResult) {
